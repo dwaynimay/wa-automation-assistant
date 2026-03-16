@@ -42,7 +42,7 @@ export async function sendHumanizedMessage(
     if (quotedMsgId) options.quotedMsg = quotedMsgId;
 
     await WPP.chat.sendTextMessage(to, text, options);
-    console.log('[WPP] pesan terkirim ke ', to);
+    console.log('[WPP] pesan terkirim ke ', to, text);
 
   } catch (error) {
     console.error('[WPP] gagal kirim pesan', error);

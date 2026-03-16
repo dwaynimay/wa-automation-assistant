@@ -1,5 +1,7 @@
+// import wpp
 import { getWPP } from './core/wpp/instance';
 import { injectWajs } from './core/wpp/injector';
+
 import { setupMessageHandler } from './services/message-handler';
 import { injectSidebarUI } from './ui/sidebar';
 
