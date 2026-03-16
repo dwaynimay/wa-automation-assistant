@@ -1,22 +1,23 @@
 import { sleep, randomInt } from '../utils/helpers';
 
+
 export function getWPP(): any {
   return (window as any).WPP;
 }
 
 export function injectWajs(): Promise<void> {
   return new Promise((resolve) => {
+    
     if (getWPP()) {
-      console.log('✅ WPP sudah tersedia');
+      console.log('[WPP] Loaded');
       return resolve();
     }
 
-    console.log('📥 Mengload WPP library...');
     const script = document.createElement("script");
     script.src = "https://cdn.jsdelivr.net/npm/@wppconnect/wa-js@latest/dist/wppconnect-wa.js";
     script.async = true;
     script.onload = () => {
-      console.log('✅ WPP library loaded');
+      console.log('[WPP] Loaded]');
       resolve();
     };
     script.onerror = () => {

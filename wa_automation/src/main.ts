@@ -1,30 +1,11 @@
-/**
- * MAIN ENTRY POINT
- *
- * File ini adalah titik masuk utama dari userscript.
- * Bertugas untuk:
- *
- * - Inisialisasi sistem
- * - Load konfigurasi
- * - Menghubungkan semua module
- * - Menjalankan automation
- *
- */
-
-import { CONFIG } from './config';
-import { injectWajs, getWPP } from './core/wpp';
+import { getWPP } from './core/wpp/instance';
+import { injectWajs } from './core/wpp/injector';
 import { setupMessageHandler } from './services/message-handler';
 import { injectSidebarUI } from './ui/sidebar';
 
+
 async function start() {
-  console.log("🚀 ========================================");
-  console.log("🚀 Memulai Groq WhatsApp Bot Modular");
-  console.log("🚀 ========================================");
-  
-  if (CONFIG.GROQ_API_KEY.includes("YOUR_API_KEY")) {
-    console.error('❌ FATAL: Ganti GROQ_API_KEY di src/config.ts');
-    return;
-  }
+  console.log("[START] WA AUTOMATION")
 
   await injectWajs();
   
@@ -41,5 +22,4 @@ async function start() {
   }, 1000);
 }
 
-// Eksekusi jalanin bot
 start();

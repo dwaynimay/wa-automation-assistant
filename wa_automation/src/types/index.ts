@@ -14,3 +14,9 @@ export interface WAMessage {
   body: string;
   isGroup: boolean;
 }
+
+export interface BotCommand {
+  name: string;
+  description: string;
+  execute: (chatId: string, msgId: string, args: string[]) => Promise<void> | void;
+}

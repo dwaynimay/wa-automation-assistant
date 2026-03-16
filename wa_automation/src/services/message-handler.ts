@@ -1,8 +1,9 @@
-import { STATE } from '../config';
-import { getWPP, sendHumanizedMessage } from '../core/wpp';
+import { STATE, BOT_RULES } from '../config'; // <-- Tambahkan BOT_RULES di import
+import { getWPP } from '../core/wpp/instance';
+import { sendHumanizedMessage } from '../core/wpp/sender';
 import { memoryManager } from '../core/memory';
 import { askAI } from '../features/ai-assistant';
-import { handlePing } from '../features/ping';
+import { getCommand } from './command-registry'; 
 
 export function setupMessageHandler() {
   const WPP = getWPP();
@@ -11,8 +12,33 @@ export function setupMessageHandler() {
   WPP.on('chat.new_message', async (msg: any) => {
     try {
       if (!STATE.botAktif) return;
-      if (msg.id?.fromMe) return; // Abaikan pesan sendiri
-      if (msg.isGroup) return;    // Abaikan grup (bisa diubah nanti kalau butuh)
+
+      // ==========================================
+      // 🛡️ SISTEM FILTERING BERDASARKAN CONFIG
+      // ==========================================
+      
+      // 1. Filter Status/Story WA (Biasanya msg.isStatusV3 bernilai true untuk story)
+      if (msg.isStatusV3 && !BOT_RULES.respondToStatus) return;
+
+      // 2. Filter Pesan Sendiri (fromMe)
+      if (msg.id?.fromMe && !BOT_RULES.respondToSelf) return;
+
+      // 3. Filter Pesan Grup
+      if (msg.isGroup && !BOT_RULES.respondToGroups) return;
+
+      const chatId = typeof msg.from === 'string' ? msg.from : (msg.from._serialized || String(msg.from));
+
+      // 4. Filter Whitelist Nomor Pribadi (Jika array tidak kosong)
+      if (!msg.isGroup && BOT_RULES.whitelistNumbers.length > 0) {
+        if (!BOT_RULES.whitelistNumbers.includes(chatId)) return;
+      }
+
+      // 5. Filter Whitelist Grup (Jika array tidak kosong)
+      if (msg.isGroup && BOT_RULES.whitelistGroups.length > 0) {
+        if (!BOT_RULES.whitelistGroups.includes(chatId)) return;
+      }
+
+      // ==========================================
 
       const text = (msg.body || "").trim();
       if (!text) return;
@@ -20,24 +46,21 @@ export function setupMessageHandler() {
       const msgId = msg.id?._serialized || String(msg.id);
       if (memoryManager.isMessageProcessed(msgId)) return;
 
-      // Fix ID supaya pasti string
-      const chatId = typeof msg.from === 'string' ? msg.from : (msg.from._serialized || String(msg.from));
-      console.log(`📩 [Pesan Baru] dari ${chatId}: "${text}"`);
+      console.log(`📩 [Pesan Baru Lolos Filter] dari ${chatId}: "${text}"`);
 
       // ==========================================
       // 🔀 ROUTING SYSTEM (Command vs AI)
       // ==========================================
       if (text.startsWith('!')) {
         const args = text.slice(1).split(' ');
-        const command = args.shift()?.toLowerCase();
+        const commandName = args.shift()?.toLowerCase();
 
-        switch (command) {
-          case 'ping':
-            const balasPing = handlePing();
-            await sendHumanizedMessage(chatId, balasPing, msgId);
-            return; // Stop di sini, jangan lanjut ke AI
-            
-          // Tambahin case lain di sini nanti, misal: case 'cuaca': handleCuaca();
+        if (commandName) {
+          const command = getCommand(commandName);
+          if (command) {
+            await command.execute(chatId, msgId, args);
+            return;
+          }
         }
       }
 
