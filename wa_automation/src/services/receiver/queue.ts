@@ -43,9 +43,18 @@ async function processQueue() {
       lastProcessedTime.set(data.idChat, Date.now());
 
       try {
+// Di dalam src/services/receiver/queue.ts (Bagian processQueue)
         console.log(`🚀 [Memproses] Teks dari ${data.namaPanggilan}: \n"${data.teks}"`);
-        // Tunggu sampai AI atau Command selesai membalas
-        await routeMessage(data.teks, data.idChat, data.idPesan, data.namaPanggilan);
+        
+        // 👇 Ubah baris ini untuk menambahkan data.isReply dan data.teksDibalas
+        await routeMessage(
+          data.teks, 
+          data.idChat, 
+          data.idPesan, 
+          data.namaPanggilan, 
+          data.isReply, 
+          data.teksDibalas
+        );
       } catch (e) {
         console.error("❌ [Queue Error]:", e);
       }
