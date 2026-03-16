@@ -12,8 +12,6 @@ dist
 dist-ssr
 *.local
 
-config.ts
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -24,3 +22,6 @@ config.ts
 *.njsproj
 *.sln
 *.sw?
+
+.env
+.env.local
