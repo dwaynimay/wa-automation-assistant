@@ -2,7 +2,7 @@
 import { getWPP } from './core/wpp/instance';
 import { injectWajs } from './core/wpp/injector';
 
-import { setupMessageHandler } from './services/message-handler';
+import { setupMessageListener } from './services/receiver/listener';
 import { injectSidebarUI } from './ui/sidebar';
 
 
@@ -19,7 +19,7 @@ async function start() {
       
       // Nyalain UI & Router Pesan
       injectSidebarUI();
-      setupMessageHandler();
+      setupMessageListener();
     }
   }, 1000);
 }
