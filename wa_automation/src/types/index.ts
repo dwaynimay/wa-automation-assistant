@@ -1,12 +1,14 @@
 export type WPPType = any;
 
 export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
+  role: "system" | "user" | "assistant" | "tool"; // <-- Tambahkan peran "tool"
+  content?: string | null; // <-- Jadikan opsional (?) karena saat AI memanggil tool, content-nya kadang kosong (null)
+  
+  // 👇 Tambahkan atribut khusus untuk fitur Alat/Tools (Web Search)
+  tool_calls?: any[]; 
+  tool_call_id?: string;
+  name?: string;
 }
-
-
-
 
 export interface MessageData {
   // 1. Metadata
@@ -41,15 +43,15 @@ export interface MessageData {
 
 
 
-export interface WAMessage {
-  id: {
-    fromMe: boolean;
-    _serialized?: string;
-  };
-  from: string | any;
-  body: string;
-  isGroup: boolean;
-}
+// export interface WAMessage {
+//   id: {
+//     fromMe: boolean;
+//     _serialized?: string;
+//   };
+//   from: string | any;
+//   body: string;
+//   isGroup: boolean;
+// }
 
 export interface BotCommand {
   name: string;
