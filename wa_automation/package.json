@@ -4,11 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"npm run dev:vite\" \"npm run dev:python\"",
+    "dev:vite": "vite",
+    "dev:python": "backend/venv/bin/python backend/server.py",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "typescript": "^5.9.2",
     "vite": "^7.1.3",
     "vite-plugin-monkey": "^5.0.9"
