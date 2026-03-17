@@ -12,7 +12,9 @@ export default defineConfig({
         grant: ['unsafeWindow', 'GM_xmlhttpRequest'], // Pastikan GM_xmlhttpRequest ada di sini
         connect: [
           'api.groq.com',
-          'lite.duckduckgo.com'
+          'lite.duckduckgo.com',
+          'localhost',
+          '127.0.0.1'
         ]
       },
     }),

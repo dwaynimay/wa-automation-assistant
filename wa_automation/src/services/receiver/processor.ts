@@ -3,7 +3,8 @@ import { memoryManager } from '../../core/memory';
 import { extractMessageData } from './extractor';
 import { passesFilter } from './filter';
 import { addMessageToStitcher } from './stitcher';
-
+import { dbManager } from '../../core/database';
+ 
 export async function processIncomingMessage(msg: any) {
   try {
     console.log("🔄 [Processor] Mulai memproses pesan...");
@@ -17,7 +18,14 @@ export async function processIncomingMessage(msg: any) {
     // 2. EKSTRAKSI DATA
     const dataPesan = await extractMessageData(msg);
     console.log(`🧩 [Processor] Ekstraksi berhasil. Pengirim: ${dataPesan.namaPanggilan}, Tipe: ${dataPesan.tipePesan}`);
+    if (!dataPesan.teks || dataPesan.tipePesan !== 'chat') return;
 
+    // ==========================================
+    // 💾 SIMPAN SEMUA PESAN MASUK (SEBELUM FILTER)
+    // ==========================================
+    // Apapun pesannya, dari siapapun, kita simpan dulu ke SQLite
+    await dbManager.saveUser(dataPesan.idChat, dataPesan.namaPanggilan);
+    await dbManager.saveMessage(dataPesan.idPesan, dataPesan.idChat, 'user', dataPesan.teks);
     // 3. FILTERING KEAMANAN
     if (!passesFilter(msg, dataPesan.idChat)) {
       console.log("🛑 [Processor] Berhenti: Ditolak oleh Filter (Cek config.ts BOT_RULES)");

@@ -1,9 +1,8 @@
-// Di dalam src/services/receiver/router.ts
 import { getCommand } from '../command-registry';
 import { askAI } from '../../features/ai-assistant';
 import { sendHumanizedMessage } from '../../core/wpp/sender';
+import { dbManager } from '../../core/database'; // <--- PASTIKAN INI DIIMPORT
 
-// 👇 Tambahkan isReply dan teksDibalas di parameter
 export async function routeMessage(
   text: string, 
   chatId: string, 
@@ -13,8 +12,13 @@ export async function routeMessage(
   teksDibalas: string | undefined = undefined
 ) {
   
+  // 💾 1. CATAT KE SQLITE LAPTOP (PROFIL & PESAN)
+  console.log("📝 [Router] Mencoba mencatat ke Database...");
+  await dbManager.saveUser(chatId, senderName);
+  await dbManager.saveMessage(msgId, chatId, 'user', text);
+
+  // 2. CEK COMMAND MANUAL (!ping dll)
   if (text.startsWith('!')) {
-    // ... (Logika command tetap sama tidak usah diubah)
     const args = text.slice(1).split(' ');
     const commandName = args.shift()?.toLowerCase();
     if (commandName) {
@@ -26,10 +30,14 @@ export async function routeMessage(
     }
   }
 
-  // 👇 Oper parameter barunya ke askAI
+  // 3. PROSES KE AI
   const balasanAI = await askAI(text, chatId, senderName, isReply, teksDibalas);
   
   if (balasanAI) {
     await sendHumanizedMessage(chatId, balasanAI, msgId);
+
+    // 💾 4. CATAT BALASAN BOT KE SQLITE
+    const botMsgId = `bot_${Date.now()}`; 
+    await dbManager.saveMessage(botMsgId, chatId, 'bot', balasanAI);
   }
 }
