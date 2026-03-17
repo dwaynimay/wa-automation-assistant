@@ -16,7 +16,8 @@ export const dbManager = {
     });
   },
 
-  async saveMessage(msgId: string, jid: string, role: 'user' | 'bot', content: string) {
+async saveMessage(msgId: string, jid: string, role: 'user' | 'bot' | 'owner', content: string) {
+    console.log(`📡 [DB] Mengirim ke Python: ${role} - ${content.substring(0, 20)}...`);
     GM_xmlhttpRequest({
       method: "POST",
       url: `${API_URL}/save_message`,

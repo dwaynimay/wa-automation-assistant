@@ -1,7 +1,7 @@
 import { getCommand } from '../command-registry';
 import { askAI } from '../../features/ai-assistant';
 import { sendHumanizedMessage } from '../../core/wpp/sender';
-import { dbManager } from '../../core/database'; // <--- PASTIKAN INI DIIMPORT
+import { STATE } from '../../config'
 
 export async function routeMessage(
   text: string, 
@@ -14,8 +14,6 @@ export async function routeMessage(
   
   // 💾 1. CATAT KE SQLITE LAPTOP (PROFIL & PESAN)
   console.log("📝 [Router] Mencoba mencatat ke Database...");
-  await dbManager.saveUser(chatId, senderName);
-  await dbManager.saveMessage(msgId, chatId, 'user', text);
 
   // 2. CEK COMMAND MANUAL (!ping dll)
   if (text.startsWith('!')) {
@@ -34,10 +32,7 @@ export async function routeMessage(
   const balasanAI = await askAI(text, chatId, senderName, isReply, teksDibalas);
   
   if (balasanAI) {
+    STATE.lastBotText = balasanAI;
     await sendHumanizedMessage(chatId, balasanAI, msgId);
-
-    // 💾 4. CATAT BALASAN BOT KE SQLITE
-    const botMsgId = `bot_${Date.now()}`; 
-    await dbManager.saveMessage(botMsgId, chatId, 'bot', balasanAI);
   }
 }

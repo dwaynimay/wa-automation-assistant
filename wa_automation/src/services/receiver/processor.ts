@@ -1,52 +1,42 @@
+// File: src/services/receiver/processor.ts
 import { STATE } from '../../config';
-import { memoryManager } from '../../core/memory';
 import { extractMessageData } from './extractor';
 import { passesFilter } from './filter';
 import { addMessageToStitcher } from './stitcher';
 import { dbManager } from '../../core/database';
- 
+
 export async function processIncomingMessage(msg: any) {
   try {
-    console.log("🔄 [Processor] Mulai memproses pesan...");
-
-    // 1. CEK SAKLAR UTAMA
-    if (!STATE.botAktif) {
-      console.log("🛑 [Processor] Berhenti: Bot sedang dimatikan (botAktif = false)");
-      return;
-    }
-
-    // 2. EKSTRAKSI DATA
     const dataPesan = await extractMessageData(msg);
-    console.log(`🧩 [Processor] Ekstraksi berhasil. Pengirim: ${dataPesan.namaPanggilan}, Tipe: ${dataPesan.tipePesan}`);
     if (!dataPesan.teks || dataPesan.tipePesan !== 'chat') return;
 
-    // ==========================================
-    // 💾 SIMPAN SEMUA PESAN MASUK (SEBELUM FILTER)
-    // ==========================================
-    // Apapun pesannya, dari siapapun, kita simpan dulu ke SQLite
-    await dbManager.saveUser(dataPesan.idChat, dataPesan.namaPanggilan);
-    await dbManager.saveMessage(dataPesan.idPesan, dataPesan.idChat, 'user', dataPesan.teks);
-    // 3. FILTERING KEAMANAN
-    if (!passesFilter(msg, dataPesan.idChat)) {
-      console.log("🛑 [Processor] Berhenti: Ditolak oleh Filter (Cek config.ts BOT_RULES)");
-      return;
-    }
-    
-    // 4. CEK SPAM/MEMORI
-    if (memoryManager.isMessageProcessed(dataPesan.idPesan)) {
-      console.log("🛑 [Processor] Berhenti: Pesan ini sudah pernah diproses sebelumnya (Duplikat)");
-      return;
+    // 1. CEK SIAPA YANG NGOMONG
+    const isFromMe = msg.id?.fromMe === true;
+    let role: 'user' | 'bot' | 'owner' = 'user';
+    let namaFix = dataPesan.namaPanggilan;
+
+    if (isFromMe) {
+      // Cek apakah teksnya sama persis dengan balasan AI terakhir
+      if (dataPesan.teks === STATE.lastBotText) {
+        role = 'bot';
+        namaFix = 'BOT AI';
+      } else {
+        role = 'owner'; // <--- INI KAMU (Ngetik manual)
+        namaFix = 'Dwaynimay (Owner)';
+      }
     }
 
-    // 5. FILTER JENIS PESAN
-    if (dataPesan.tipePesan !== 'chat' || !dataPesan.teks) {
-      console.log(`🛑 [Processor] Berhenti: Bukan teks biasa atau teks kosong. (Tipe: ${dataPesan.tipePesan})`);
-      return; 
-    }
+    // 2. SIMPAN KE DATABASE
+    await dbManager.saveUser(dataPesan.idChat, namaFix);
+    await dbManager.saveMessage(dataPesan.idPesan, dataPesan.idChat, role, dataPesan.teks);
 
-    console.log(`✅ [Processor] LOLOS SEMUA FILTER! Menyerahkan pesan dari ${dataPesan.namaPanggilan} ke Stitcher...`);
+    // 3. JANGAN BALAS PESAN SENDIRI (Bot atau Owner)
+    if (isFromMe) return;
 
-    // 6. LEMPAR KE STITCHER
+    // 4. JANGAN BALAS KALAU BOT OFF ATAU GAK LOLOS FILTER
+    if (!STATE.botAktif || !passesFilter(msg, dataPesan.idChat)) return;
+
+    // 5. LANJUT KE AI
     addMessageToStitcher(dataPesan);
 
   } catch (err) {

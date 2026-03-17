@@ -16,6 +16,7 @@ export const CONFIG = {
 
 export const STATE = {
   botAktif: false,
+  lastBotText:'',
 };
 
 export const BOT_RULES = {
