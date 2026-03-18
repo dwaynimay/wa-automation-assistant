@@ -1,7 +1,7 @@
 import { getCommand } from '../commands/command-registry';
 import { askAI } from '../../features/ai-assistant';
 import { sendHumanizedMessage } from '../../core/wpp/sender';
-import { STATE } from '../../config';
+import { runtimeState } from '../../config';
 
 export async function routeMessage(
   text: string,
@@ -31,7 +31,7 @@ export async function routeMessage(
   const balasanAI = await askAI(text, chatId, senderName, isReply, teksDibalas);
 
   if (balasanAI) {
-    STATE.lastBotText = balasanAI;
+    runtimeState.lastBotText = balasanAI;
     await sendHumanizedMessage(chatId, balasanAI, msgId);
   }
 }

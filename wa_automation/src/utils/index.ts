@@ -1,3 +1,4 @@
 export { randomInt } from './random';
 export { sleep } from './sleep';
-export { formatCurrentTime } from './time';
+export { formatIndonesianDate } from './date';
+export { parseEnvArray } from './parseEnvArray';

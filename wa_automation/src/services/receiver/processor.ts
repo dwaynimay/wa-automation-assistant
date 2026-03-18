@@ -1,5 +1,5 @@
 // File: src/services/receiver/processor.ts
-import { STATE } from '../../config';
+import { runtimeState } from '../../config';
 import { extractMessageData } from './extractor';
 import { passesFilter } from './filter';
 import { addMessageToStitcher } from './stitcher';
@@ -17,7 +17,7 @@ export async function processIncomingMessage(msg: any) {
 
     if (isFromMe) {
       // Cek apakah teksnya sama persis dengan balasan AI terakhir
-      if (dataPesan.teks === STATE.lastBotText) {
+      if (dataPesan.teks === runtimeState.lastBotText) {
         role = 'bot';
         namaFix = 'BOT AI';
       } else {
@@ -39,7 +39,7 @@ export async function processIncomingMessage(msg: any) {
     if (isFromMe) return;
 
     // 4. JANGAN BALAS KALAU BOT OFF ATAU GAK LOLOS FILTER
-    if (!STATE.botAktif || !passesFilter(msg, dataPesan.idChat)) return;
+    if (!runtimeState.isBotActive || !passesFilter(msg, dataPesan.idChat)) return;
 
     // 5. LANJUT KE AI
     addMessageToStitcher(dataPesan);

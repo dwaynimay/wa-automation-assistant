@@ -1,6 +1,6 @@
 // File: src/features/shortcuts.ts
 import { getWPP } from '../core/wpp';
-import { tampilkanNotifikasi } from '../ui/toast';
+import { tampilkanNotifikasi } from '../ui';
 
 /**
  * Fitur Shortcut Keyboard

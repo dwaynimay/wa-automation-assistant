@@ -1,7 +1,7 @@
 import { fetchGroqAPI } from '../core/groq';
 import { memoryManager } from '../core/memory';
-import { formatWaktuSekarang } from '../utils/helpers';
-import { CONFIG } from '../config';
+import { formatIndonesianDate } from '../utils';
+import { appConfig } from '../config';
 import { searchInternet } from './web-search';
 
 // 🛠️ DAFTAR ALAT PERSIS SEPERTI DI SCRIPT LAMA
@@ -47,7 +47,7 @@ export async function askAI(
       role: 'system',
       content: `Kamu adalah asisten pribadi Farrel yang membantu membalas pesan WhatsApp ketika Farrel sedang sibuk.
 Lawan bicaramu saat ini adalah: ${senderName}.
-informasi Waktu saat ini: ${formatWaktuSekarang()} WIB.
+informasi Waktu saat ini: ${formatIndonesianDate()} WIB.
 
 Gaya jawaban:
 - Gunakan bahasa Indonesia yang ramah
@@ -72,7 +72,7 @@ Balasan harus terasa seperti asisten pribadi yang ramah dan profesional.`,
 
     // 2. TEMBAKAN PERTAMA
     const payload1: any = {
-      model: CONFIG.GROQ_MODEL,
+      model: appConfig.groqModel,
       messages: [systemMessage, ...memoryManager.getHistory(idChat)],
       tools: aiTools,
       tool_choice: 'auto', // Kita kembalikan ke auto sesuai script lama
@@ -102,7 +102,7 @@ Balasan harus terasa seperti asisten pribadi yang ramah dan profesional.`,
 
       // 3. TEMBAKAN KEDUA (Bawa Hasil Browsing)
       const payload2 = {
-        model: CONFIG.GROQ_MODEL,
+        model: appConfig.groqModel,
         messages: [systemMessage, ...memoryManager.getHistory(idChat)],
         temperature: 0.6,
         max_tokens: 1024,
