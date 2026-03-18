@@ -1,69 +1,61 @@
-// File: src/services/receiver/queue.ts
-import { MessageData } from '../../types';
-import { routeMessage } from './router';
+// src/services/receiver/queue.ts
+//
+// Antrean pesan dengan sistem anti-spam bawaan.
+// Memastikan pesan diproses satu per satu (tidak paralel)
+// dan satu orang tidak bisa membanjiri bot dalam waktu singkat.
 
-// Array untuk menyimpan antrean pesan
-const messageQueue: MessageData[] = [];
-let isProcessing = false;
+import type { MessageData }        from '../../shared/types';      // ✅
+import { ANTI_SPAM_COOLDOWN_MS }   from '../../shared/constants';  // ✅
+import { routeMessage }            from './router';
 
-// Memori untuk mencatat kapan terakhir kali seseorang diproses (Anti-Spam)
+const messageQueue: MessageData[]              = [];
 const lastProcessedTime = new Map<string, number>();
-const COOLDOWN_MS = 5000; // Cooldown 5 detik per orang
+let isProcessing                               = false;
 
-export async function enqueueMessage(data: MessageData) {
-  const now = Date.now();
-  const lastTime = lastProcessedTime.get(data.idChat) || 0;
+export async function enqueueMessage(data: MessageData): Promise<void> {
+  const now      = Date.now();
+  const lastTime = lastProcessedTime.get(data.idChat) ?? 0;
 
-  // 🛡️ SISTEM ANTI-SPAM
-  if (now - lastTime < COOLDOWN_MS) {
-    console.log(`⏳ [Anti-Spam] Mengabaikan spam dari ${data.namaPanggilan}`);
-    return; // Buang pesannya, jangan dimasukkan antrean!
+  // Sistem anti-spam: abaikan jika orang ini baru saja diproses
+  if (now - lastTime < ANTI_SPAM_COOLDOWN_MS) {
+    console.log(`[Queue] Anti-spam aktif — mengabaikan pesan dari: ${data.namaPanggilan}`);
+    return;
   }
 
-  // Jika lolos anti-spam, masukkan ke ujung antrean
   messageQueue.push(data);
-  console.log(
-    `📥 [Queue] Antrean bertambah. Sisa antrean: ${messageQueue.length}`,
-  );
+  console.log(`[Queue] Pesan masuk antrean. Total: ${messageQueue.length}`);
 
-  // Panggil pemroses antrean
-  processQueue();
+  // Mulai memproses antrean (jika belum berjalan)
+  await drainQueue();
 }
 
-// Mesin Pemroses Antrean
-async function processQueue() {
-  // Kalau mesin sedang sibuk memproses pesan lain, atau antrean kosong, diam saja
+async function drainQueue(): Promise<void> {
+  // Jika mesin sudah berjalan atau antrean kosong, tidak perlu melakukan apa-apa
   if (isProcessing || messageQueue.length === 0) return;
 
-  isProcessing = true; // Kunci pintunya, mesin mulai bekerja
+  isProcessing = true;
 
   while (messageQueue.length > 0) {
-    const data = messageQueue.shift(); // Ambil antrean paling depan
+    const data = messageQueue.shift();
+    if (!data) continue;
 
-    if (data) {
-      // Catat waktu proses ini agar orangnya terkena cooldown
-      lastProcessedTime.set(data.idChat, Date.now());
+    // Catat waktu proses untuk mekanisme anti-spam
+    lastProcessedTime.set(data.idChat, Date.now());
 
-      try {
-        // Di dalam src/services/receiver/queue.ts (Bagian processQueue)
-        console.log(
-          `🚀 [Memproses] Teks dari ${data.namaPanggilan}: \n"${data.teks}"`,
-        );
-
-        // 👇 Ubah baris ini untuk menambahkan data.isReply dan data.teksDibalas
-        await routeMessage(
-          data.teks,
-          data.idChat,
-          data.idPesan,
-          data.namaPanggilan,
-          data.isReply,
-          data.teksDibalas,
-        );
-      } catch (e) {
-        console.error('❌ [Queue Error]:', e);
-      }
+    try {
+      console.log(`[Queue] Memproses pesan dari: ${data.namaPanggilan}`);
+      await routeMessage(
+        data.teks,
+        data.idChat,
+        data.idPesan,
+        data.namaPanggilan,
+        data.isReply,
+        data.teksDibalas,
+      );
+    } catch (e) {
+      console.error('[Queue] Error saat memproses pesan:', e);
     }
   }
 
-  isProcessing = false; // Buka pintunya lagi kalau antrean sudah habis
+  isProcessing = false;
 }

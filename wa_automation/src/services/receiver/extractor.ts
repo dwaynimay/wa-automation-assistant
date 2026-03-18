@@ -1,10 +1,21 @@
-import { MessageData } from '../../types';
-import { getWPP } from '../../core/wpp/instance';
+// src/services/receiver/extractor.ts
+//
+// Bertugas mengurai objek pesan mentah dari WPP (yang bentuknya tidak tentu)
+// menjadi struktur MessageData yang rapi dan bisa diandalkan.
+// Setiap "cekpoint" dibungkus try/catch agar satu field yang gagal
+// tidak merusak keseluruhan proses.
 
-export async function extractMessageData(msg: any): Promise<MessageData> {
-  console.log('   [Extractor] Memulai ekstraksi data...');
+import { getWPP } from '../../core/wpp'; // ✅ via barrel
+import type { MessageData } from '../../shared/types'; // ✅ dari shared
 
-  // Siapkan nilai bawaan (default) yang aman
+export async function extractMessageData(msg: unknown): Promise<MessageData> {
+  // Kita cast sekali di sini agar kode ekstraksi lebih bersih.
+  // Penggunaan optional chaining (?.) di bawah sudah melindungi dari undefined.
+  const m = msg as Record<string, any>;
+
+  console.log('[Extractor] Memulai ekstraksi data...');
+
+  // Nilai default yang aman — digunakan jika satu cekpoint gagal
   let idPesan = 'unknown',
     waktu = 0,
     fromMe = false;
@@ -17,89 +28,85 @@ export async function extractMessageData(msg: any): Promise<MessageData> {
   let tipePesan = 'unknown',
     teks = '';
   let isReply = false,
-    idPesanDibalas = undefined,
-    teksDibalas = undefined;
+    idPesanDibalas: string | undefined;
+  let teksDibalas: string | undefined;
   let hasMedia = false,
-    mimeType = undefined;
+    mimeType: string | undefined;
 
-  // CEKPOINT 1: Metadata
+  // Cekpoint 1: Metadata dasar
   try {
-    idPesan = msg?.id?._serialized || String(msg?.id || 'unknown');
-    waktu = msg?.t || Math.floor(Date.now() / 1000);
-    fromMe = msg?.id?.fromMe || msg?.fromMe || false;
-    console.log('   [Extractor] Cekpoint 1 (Metadata): AMAN');
+    idPesan = m?.id?._serialized || String(m?.id ?? 'unknown');
+    waktu = m?.t ?? Math.floor(Date.now() / 1000);
+    fromMe = m?.id?.fromMe ?? m?.fromMe ?? false;
   } catch (e) {
-    console.error('   [Extractor] ERROR di Cekpoint 1:', e);
+    console.error('[Extractor] Gagal di Cekpoint 1 (Metadata):', e);
   }
 
-  // CEKPOINT 2: Routing & ID
+  // Cekpoint 2: Routing & ID chat
   try {
     idChat =
-      typeof msg?.from === 'string'
-        ? msg.from
-        : msg?.from?._serialized || String(msg?.from || 'unknown');
-    isGroup = msg?.isGroup || false;
-    pengirimAsli = isGroup && msg?.author ? msg.author : idChat;
-    console.log('   [Extractor] Cekpoint 2 (Routing): AMAN');
+      typeof m?.from === 'string'
+        ? m.from
+        : (m?.from?._serialized ?? 'unknown');
+    isGroup = m?.isGroup ?? false;
+    pengirimAsli = isGroup && m?.author ? m.author : idChat;
   } catch (e) {
-    console.error('   [Extractor] ERROR di Cekpoint 2:', e);
+    console.error('[Extractor] Gagal di Cekpoint 2 (Routing):', e);
   }
 
-  // CEKPOINT 3: Profil
+  // Cekpoint 3: Info profil pengirim
   try {
-    namaProfil = msg?.notifyName || msg?.sender?.pushname || 'Orang';
-    namaKontak = msg?.sender?.name || msg?.sender?.formattedName || '';
-    namaPanggilan = namaKontak ? namaKontak : namaProfil;
-    console.log('   [Extractor] Cekpoint 3 (Profil): AMAN');
+    namaProfil = m?.notifyName ?? m?.sender?.pushname ?? 'Orang';
+    namaKontak = m?.sender?.name ?? m?.sender?.formattedName ?? '';
+    namaPanggilan = namaKontak || namaProfil;
   } catch (e) {
-    console.error('   [Extractor] ERROR di Cekpoint 3:', e);
+    console.error('[Extractor] Gagal di Cekpoint 3 (Profil):', e);
   }
 
-  // CEKPOINT 4: Ekstraksi Teks
+  // Cekpoint 4: Isi teks pesan
   try {
-    tipePesan = msg?.type || 'unknown';
-    const teksMentah = msg?.body || msg?.caption || msg?.content || '';
-    teks =
-      typeof teksMentah === 'string'
-        ? teksMentah.trim()
-        : String(teksMentah).trim();
-    console.log('   [Extractor] Cekpoint 4 (Teks): AMAN');
+    tipePesan = m?.type ?? 'unknown';
+    const mentah = m?.body ?? m?.caption ?? m?.content ?? '';
+    teks = String(mentah).trim();
   } catch (e) {
-    console.error('   [Extractor] ERROR di Cekpoint 4:', e);
+    console.error('[Extractor] Gagal di Cekpoint 4 (Teks):', e);
   }
 
-  // CEKPOINT 5: Pesan Balasan (Reply)
+  // Cekpoint 5: Konteks reply (pesan yang dikutip)
   try {
-    isReply = msg?.hasQuotedMsg || !!msg?.quotedMsgId || false;
-    idPesanDibalas = msg?.quotedMsgId || undefined;
+    isReply = m?.hasQuotedMsg ?? !!m?.quotedMsgId;
+    idPesanDibalas = m?.quotedMsgId ?? undefined;
+
     if (isReply && idPesanDibalas) {
       const WPP = getWPP();
-      // Paksa cari pesan aslinya secara manual!
-      const pesanAsli = await WPP.chat.getMessageById(idPesanDibalas);
-
-      const tMentah =
-        pesanAsli?.body || pesanAsli?.caption || msg?.quotedMsgObj?.body || '';
-      teksDibalas =
-        typeof tMentah === 'string' ? tMentah.trim() : String(tMentah).trim();
+      if (WPP) {
+        const pesanAsli = await WPP.chat.getMessageById(idPesanDibalas);
+        const tMentah =
+          pesanAsli?.body ?? pesanAsli?.caption ?? m?.quotedMsgObj?.body ?? '';
+        teksDibalas = String(tMentah).trim() || undefined;
+      }
     }
-    console.log('   [Extractor] Cekpoint 5 (Reply): AMAN');
   } catch (e) {
-    console.error('   [Extractor] ERROR di Cekpoint 5:', e);
+    console.error('[Extractor] Gagal di Cekpoint 5 (Reply):', e);
   }
 
-  // CEKPOINT 6: Media
+  // Cekpoint 6: Media
   try {
-    const arrMedia = ['image', 'video', 'document', 'audio', 'ptt', 'sticker'];
-    hasMedia = msg?.hasMedia || arrMedia.includes(tipePesan);
-    mimeType = msg?.mimetype || undefined;
-    console.log('   [Extractor] Cekpoint 6 (Media): AMAN');
+    const TIPE_MEDIA = [
+      'image',
+      'video',
+      'document',
+      'audio',
+      'ptt',
+      'sticker',
+    ];
+    hasMedia = m?.hasMedia ?? TIPE_MEDIA.includes(tipePesan);
+    mimeType = m?.mimetype ?? undefined;
   } catch (e) {
-    console.error('   [Extractor] ERROR di Cekpoint 6:', e);
+    console.error('[Extractor] Gagal di Cekpoint 6 (Media):', e);
   }
 
-  console.log(
-    '   [Extractor] SEMUA CEKPOINT SELESAI. Menyerahkan data kembali ke Processor.',
-  );
+  console.log('[Extractor] Ekstraksi selesai.');
 
   return {
     idPesan,

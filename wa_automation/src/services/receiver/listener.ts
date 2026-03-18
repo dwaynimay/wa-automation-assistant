@@ -1,20 +1,25 @@
-/*
- *
- * menangkap pesan baru dan mengirim ke processor
- *
- */
+// src/services/receiver/listener.ts
+//
+// Pintu masuk pertama semua pesan WhatsApp.
+// Tugasnya SATU: dengarkan event dari WPP, lalu lempar ke processor.
+// Tidak ada logika bisnis di sini.
 
-import { getWPP } from '../../core/wpp/instance';
+import { getWPP } from '../../core/wpp';              // ✅ via barrel
 import { processIncomingMessage } from './processor';
 
-export function setupMessageListener() {
+export function setupMessageListener(): void {
   const WPP = getWPP();
-  console.log('👂 [Receiver] Listener aktif mendengarkan...');
 
-  WPP.on('chat.new_message', async (msg: any) => {
-    // 👇 Tambahkan log ini agar kamu tahu ada sinyal masuk
-    console.log('📡 [Sinyal WPP] Pesan ditangkap! Mengirim ke processor...');
+  // Guard: pastikan WPP sudah tersedia sebelum mendaftar listener
+  if (!WPP) {
+    console.error('[Listener] WPP belum siap. Listener tidak dapat didaftarkan.');
+    return;
+  }
 
+  WPP.on('chat.new_message', async (msg: unknown) => {
+    console.log('[Listener] Pesan baru masuk, dikirim ke processor...');
     await processIncomingMessage(msg);
   });
+
+  console.log('[Listener] Aktif dan siap mendengarkan pesan masuk.');
 }

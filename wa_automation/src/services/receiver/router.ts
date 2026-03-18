@@ -1,7 +1,13 @@
-import { getCommand } from '../commands/command-registry';
-import { askAI } from '../../features/ai-assistant';
-import { sendHumanizedMessage } from '../../core/wpp/sender';
-import { runtimeState } from '../../config';
+// src/services/receiver/router.ts
+//
+// Pengambil keputusan: setelah pesan lolos semua filter dan antrean,
+// router memutuskan "pesan ini harus diapakan?"
+// Prioritas: command manual (!ping) → AI assistant.
+
+import { runtimeState }      from '../../config';              // ✅
+import { sendHumanizedMessage } from '../../core/wpp';         // ✅
+import { askAI }             from '../../features/ai-assistant'; // ✅
+import { getCommand }        from './commands';                 // ✅ via barrel baru
 
 export async function routeMessage(
   text: string,
@@ -9,28 +15,30 @@ export async function routeMessage(
   msgId: string,
   senderName: string,
   isReply: boolean = false,
-  teksDibalas: string | undefined = undefined,
-) {
-  // 💾 1. CATAT KE SQLITE LAPTOP (PROFIL & PESAN)
-  console.log('📝 [Router] Mencoba mencatat ke Database...');
+  teksDibalas?: string,
+): Promise<void> {
 
-  // 2. CEK COMMAND MANUAL (!ping dll)
+  // Rute 1: Command manual (diawali tanda seru, contoh: !ping)
   if (text.startsWith('!')) {
-    const args = text.slice(1).split(' ');
+    const args        = text.slice(1).split(' ');
     const commandName = args.shift()?.toLowerCase();
+
     if (commandName) {
       const command = getCommand(commandName);
       if (command) {
+        console.log(`[Router] Menjalankan command: !${commandName}`);
         await command.execute(chatId, msgId, args);
-        return;
+        return; // Selesai — tidak perlu lanjut ke AI
       }
     }
   }
 
-  // 3. PROSES KE AI
+  // Rute 2: Kirim ke AI assistant
+  console.log(`[Router] Mengarahkan ke AI untuk: ${senderName}`);
   const balasanAI = await askAI(text, chatId, senderName, isReply, teksDibalas);
 
   if (balasanAI) {
+    // Simpan teks balasan bot agar processor bisa mengenalinya nanti
     runtimeState.lastBotText = balasanAI;
     await sendHumanizedMessage(chatId, balasanAI, msgId);
   }

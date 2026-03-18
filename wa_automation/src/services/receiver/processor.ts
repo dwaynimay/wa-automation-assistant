@@ -1,49 +1,57 @@
-// File: src/services/receiver/processor.ts
-import { runtimeState } from '../../config';
-import { extractMessageData } from './extractor';
-import { passesFilter } from './filter';
-import { addMessageToStitcher } from './stitcher';
-import { dbManager } from '../../core/database';
+// src/services/receiver/processor.ts
+//
+// Orkestrator utama: menerima pesan mentah, mengekstrak, memvalidasi,
+// lalu memutuskan apakah pesan ini perlu dibalas bot atau tidak.
 
-export async function processIncomingMessage(msg: any) {
+import { runtimeState }          from '../../config';          // ✅
+import { extractMessageData }    from './extractor';
+import { passesFilter }          from './filter';
+import { addMessageToStitcher }  from './stitcher';
+
+export async function processIncomingMessage(msg: unknown): Promise<void> {
   try {
     const dataPesan = await extractMessageData(msg);
+
+    // Abaikan pesan yang bukan teks biasa (gambar, sticker, dll tanpa teks)
     if (!dataPesan.teks || dataPesan.tipePesan !== 'chat') return;
 
-    // 1. CEK SIAPA YANG NGOMONG
-    const isFromMe = msg.id?.fromMe === true;
+    const m        = msg as Record<string, any>;
+    const isFromMe = m?.id?.fromMe === true;
+
+    // --- Tentukan role pengirim ---
     let role: 'user' | 'bot' | 'owner' = 'user';
     let namaFix = dataPesan.namaPanggilan;
 
     if (isFromMe) {
-      // Cek apakah teksnya sama persis dengan balasan AI terakhir
       if (dataPesan.teks === runtimeState.lastBotText) {
-        role = 'bot';
+        role    = 'bot';
         namaFix = 'BOT AI';
       } else {
-        role = 'owner'; // <--- INI KAMU (Ngetik manual)
-        namaFix = 'Dwaynimay (Owner)';
+        role    = 'owner';
+        namaFix = 'Owner';
       }
     }
 
-    // 2. SIMPAN KE DATABASE
-    await dbManager.saveUser(dataPesan.idChat, namaFix);
-    await dbManager.saveMessage(
-      dataPesan.idPesan,
-      dataPesan.idChat,
-      role,
-      dataPesan.teks,
-    );
+    // TODO: Simpan ke database saat dbManager sudah siap
+    // await dbManager.saveUser(dataPesan.idChat, namaFix);
+    // await dbManager.saveMessage(dataPesan.idPesan, dataPesan.idChat, role, dataPesan.teks);
+    console.log(`[Processor] Role: ${role} | Nama: ${namaFix}`);
 
-    // 3. JANGAN BALAS PESAN SENDIRI (Bot atau Owner)
+    // Jangan balas pesan dari diri sendiri (bot maupun owner mengetik manual)
     if (isFromMe) return;
 
-    // 4. JANGAN BALAS KALAU BOT OFF ATAU GAK LOLOS FILTER
-    if (!runtimeState.isBotActive || !passesFilter(msg, dataPesan.idChat)) return;
+    // Jangan balas kalau bot sedang dimatikan atau pesan tidak lolos filter
+    if (!runtimeState.isBotActive) {
+      console.log('[Processor] Bot tidak aktif, pesan diabaikan.');
+      return;
+    }
 
-    // 5. LANJUT KE AI
+    if (!passesFilter(m, dataPesan.idChat)) return;
+
+    // Lulus semua pengecekan — serahkan ke stitcher untuk dikumpulkan sebelum dibalas
     addMessageToStitcher(dataPesan);
+
   } catch (err) {
-    console.error('❌ Error di Processor:', err);
+    console.error('[Processor] Error tidak tertangani:', err);
   }
 }

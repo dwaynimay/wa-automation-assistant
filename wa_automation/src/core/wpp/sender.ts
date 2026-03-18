@@ -1,50 +1,79 @@
-/*
- *
- * mengatasi logika pengiriman pesan
- *
- */
+// src/core/wpp/sender.ts
+//
+// Bertugas mengirim pesan dengan simulasi perilaku manusia:
+// jeda membuka HP → baca pesan → ketik → kirim.
+// Ini adalah satu-satunya pintu untuk mengirim pesan teks ke WhatsApp.
 
 import { getWPP } from './instance';
-import { sleep, randomInt } from '../../utils';
+import { sleep, randomInt } from '../../shared/utils';
+import {
+  TYPING_DURATION_MIN_MS,
+  TYPING_DURATION_MAX_MS,
+  OPEN_PHONE_DELAY_MIN_MS,
+  OPEN_PHONE_DELAY_MAX_MS,
+} from '../../shared/constants';
+
+// Opsi pengiriman pesan WPP
+interface SendOptions {
+  linkPreview: boolean;
+  mentions: string[];
+  quotedMsg?: string;
+}
 
 export async function sendHumanizedMessage(
   to: string,
   text: string,
-  quotedMsgId?: string, //boleh direply atau tidak
+  quotedMsgId?: string,
 ): Promise<void> {
+  const WPP = getWPP();
+
+  // Guard: WPP harus sudah siap sebelum bisa kirim pesan
+  if (!WPP) {
+    console.error('[WPP Sender] WPP belum siap. Pesan dibatalkan.');
+    return;
+  }
+
+  // Guard: nomor tujuan harus valid
+  if (!to || to.trim() === '') {
+    console.error('[WPP Sender] Nomor tujuan tidak valid:', to);
+    return;
+  }
+
   try {
-    const WPP = getWPP();
+    // Tahap 1: Simulasi jeda "membuka HP"
+    await sleep(randomInt(OPEN_PHONE_DELAY_MIN_MS, OPEN_PHONE_DELAY_MAX_MS));
 
-    // cek data no tujuan
-    if (!to || typeof to !== 'string' || to.trim() === '') {
-      console.error('[WPP] Nomor Tidak Valid', to);
-      return;
-    }
-    // waktu tunggu buka hp
-    await sleep(randomInt(800, 2500));
-
-    // status di baca (centang biru)
+    // Tahap 2: Tandai pesan sebagai sudah dibaca (centang biru)
     try {
       await WPP.chat.markIsRead(to);
-    } catch (e) {}
+    } catch {
+      // Tidak fatal jika gagal — lanjut saja
+    }
 
-    // waktu mengetik
-    const durasiNgetik = Math.min(Math.max(800, text.length * 30), 4000);
-    // kirim status mengetik
+    // Tahap 3: Hitung dan tampilkan status "sedang mengetik..."
+    // Semakin panjang teks, semakin lama waktu mengetiknya (tapi ada batas maksimal)
+    const typingDuration = Math.min(
+      Math.max(TYPING_DURATION_MIN_MS, text.length * 30),
+      TYPING_DURATION_MAX_MS,
+    );
+
     try {
-      await WPP.chat.markIsComposing(to, durasiNgetik);
-    } catch (e) {}
+      await WPP.chat.markIsComposing(to, typingDuration);
+    } catch {
+      // Tidak fatal jika gagal — lanjut saja
+    }
 
-    // waktu tunggu sebelum kirim
-    await sleep(durasiNgetik);
+    // Tahap 4: Tunggu sesuai durasi mengetik
+    await sleep(typingDuration);
 
-    // bungkus pesan sebelum dikirim
-    const options: any = { linkPreview: false, mentions: [] };
+    // Tahap 5: Kirim pesan
+    const options: SendOptions = { linkPreview: false, mentions: [] };
     if (quotedMsgId) options.quotedMsg = quotedMsgId;
 
     await WPP.chat.sendTextMessage(to, text, options);
-    console.log('[WPP] pesan terkirim ke ', to, text);
+    console.log(`[WPP Sender] Pesan terkirim ke: ${to}`);
+
   } catch (error) {
-    console.error('[WPP] gagal kirim pesan', error);
+    console.error('[WPP Sender] Gagal mengirim pesan:', error);
   }
 }

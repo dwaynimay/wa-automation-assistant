@@ -1,32 +1,36 @@
-/*
- *
- * menyuntikkan library WPPConnect ke website
- *
- */
+// src/core/wpp/injector.ts
+//
+// Bertugas menyuntikkan library WPPConnect ke halaman WhatsApp Web.
+// Dipanggil SATU KALI saat aplikasi pertama kali start.
 
 import { getWPP } from './instance';
 
+const WPP_CDN_URL =
+  'https://cdn.jsdelivr.net/npm/@wppconnect/wa-js@latest/dist/wppconnect-wa.js';
+
 export function injectWajs(): Promise<void> {
   return new Promise((resolve) => {
-    // cek ketersediaan wpp
+    // Jika WPP sudah tersedia (misal karena di-reload), langsung lanjut
     if (getWPP()) {
-      console.log('[WPP] loaded');
+      console.log('[WPP Injector] Library sudah tersedia, skip injeksi.');
       return resolve();
     }
 
-    // inject library wpp
+    console.log('[WPP Injector] Menyuntikkan library WPPConnect...');
+
     const script = document.createElement('script');
-    script.src =
-      'https://cdn.jsdelivr.net/npm/@wppconnect/wa-js@latest/dist/wppconnect-wa.js';
+    script.src = WPP_CDN_URL;
     script.async = true;
 
     script.onload = () => {
-      console.log('[WPP] loaded');
+      console.log('[WPP Injector] Library berhasil dimuat.');
       resolve();
     };
 
     script.onerror = () => {
-      console.error('[WPP] failed to load');
+      // Kita resolve (bukan reject) agar app tetap lanjut,
+      // tapi kita log error agar mudah di-debug.
+      console.error('[WPP Injector] Gagal memuat library dari CDN. Cek koneksi internet.');
       resolve();
     };
 
