@@ -1,4 +1,4 @@
-import { STATE } from '../config';
+import { runtimeState } from '../config';
 import { createToggleButton } from './createToggleButton';
 import { findSidebarAnchor } from './findSidebarAnchor';
 import { injectIntervalMs, toggleButtonId } from './uiConstants';
@@ -21,10 +21,10 @@ export function injectSidebarUi(): void {
     }
 
     const toggleButtonElement = createToggleButton(originalContainer, {
-      isActive: STATE.botAktif,
+      isActive: runtimeState.isBotActive,
       onToggle: () => {
-        STATE.botAktif = !STATE.botAktif;
-        return STATE.botAktif;
+        runtimeState.isBotActive = !runtimeState.isBotActive;
+        return runtimeState.isBotActive;
       },
     });
 

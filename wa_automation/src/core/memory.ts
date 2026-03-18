@@ -1,5 +1,5 @@
 import { ChatMessage } from '../types';
-import { CONFIG } from '../config';
+import { appConfig } from '../config';
 
 const chatMemory: Record<string, ChatMessage[]> = {};
 const ingatanPesan = new Set<string>();
@@ -15,8 +15,8 @@ export const memoryManager = {
   addMessage(chatId: string, message: ChatMessage) {
     const history = this.getHistory(chatId);
     history.push(message);
-    if (history.length > CONFIG.MAX_HISTORY) {
-      chatMemory[chatId] = history.slice(-CONFIG.MAX_HISTORY);
+    if (history.length > appConfig.maxHistory) {
+      chatMemory[chatId] = history.slice(-appConfig.maxHistory);
     }
   },
 

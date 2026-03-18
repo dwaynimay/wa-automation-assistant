@@ -1,15 +1,15 @@
 // File: src/core/groq.ts
 import { GM_xmlhttpRequest } from 'vite-plugin-monkey/dist/client';
-import { CONFIG } from '../config';
+import { appConfig } from '../config';
 
 export async function fetchGroqAPI(payload: any): Promise<any> {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: 'POST',
-      url: `${CONFIG.GROQ_BASE_URL}/chat/completions`,
+      url: `${appConfig.groqBaseUrl}/chat/completions`,
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${CONFIG.GROQ_API_KEY}`,
+        Authorization: `Bearer ${appConfig.groqApiKey}`,
       },
       data: JSON.stringify(payload),
       timeout: 30000,

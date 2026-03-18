@@ -13,6 +13,15 @@ export function replaceButtonIcon(button: HTMLButtonElement): void {
   if (!iconWrapper) return;
 
   iconWrapper.innerHTML = '';
+
+  const robotIcon = document.createElement('span');
+  robotIcon.textContent = '𖠌';
+  robotIcon.setAttribute('aria-hidden', 'true');
+  robotIcon.style.fontSize = '22px';
+  robotIcon.style.lineHeight = '1';
+
+  iconWrapper.appendChild(robotIcon);
+
   iconWrapper.style.display = 'flex';
   iconWrapper.style.justifyContent = 'center';
   iconWrapper.style.alignItems = 'center';
