@@ -1,7 +1,10 @@
-export function tampilkanNotifikasi(pesan: string, tipe: 'sukses' | 'error' = 'sukses') {
+export function tampilkanNotifikasi(
+  pesan: string,
+  tipe: 'sukses' | 'error' = 'sukses',
+) {
   const notifId = 'bot-toast-notif';
   let notif = document.getElementById(notifId);
-  
+
   if (notif) {
     notif.remove();
   }
@@ -17,11 +20,13 @@ export function tampilkanNotifikasi(pesan: string, tipe: 'sukses' | 'error' = 's
     font-family: inherit; font-size: 14px;
     transition: opacity 0.5s ease;
   `;
-  
+
   document.body.appendChild(notif);
-  
+
   setTimeout(() => {
     if (notif) notif.style.opacity = '0';
-    setTimeout(() => { if (notif) notif.remove(); }, 500);
+    setTimeout(() => {
+      if (notif) notif.remove();
+    }, 500);
   }, 2000);
 }

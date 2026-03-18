@@ -3,12 +3,12 @@
  *
  * untuk menyisipkan tombol custom ke dalam sidebar whatsapp
  * sebagai toggle untk on/off bot auto reply
- * 
+ *
  *  * Fitur:
- * - ✅ Inject tombol 
+ * - ✅ Inject tombol
  * - 🔁 Toggle state global (STATE.botAktif)
  * - 🔔 Toast notifikasi ringan
- * 
+ *
  */
 // File: src/ui/sidebar.ts
 import { createToggleButton } from './button';
@@ -16,10 +16,12 @@ import { createToggleButton } from './button';
 export function injectSidebarUI() {
   const cekInterval = setInterval(() => {
     // 1. Cari elemen patokan
-    const metaAiBtn = document.querySelector('button[aria-label="Meta AI"], button[aria-label="Komunitas"]');
+    const metaAiBtn = document.querySelector(
+      'button[aria-label="Meta AI"], button[aria-label="Komunitas"]',
+    );
 
     if (metaAiBtn) {
-      clearInterval(cekInterval); 
+      clearInterval(cekInterval);
 
       // 2. Cek apakah sudah terpasang
       if (document.getElementById('btn-groq-bot')) return;
@@ -38,5 +40,5 @@ export function injectSidebarUI() {
         btnContainerAsli.after(toggleButtonElement);
       }
     }
-  }, 2000); 
+  }, 2000);
 }

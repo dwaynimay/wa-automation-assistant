@@ -22,8 +22,10 @@ export async function enqueueMessage(data: MessageData) {
 
   // Jika lolos anti-spam, masukkan ke ujung antrean
   messageQueue.push(data);
-  console.log(`📥 [Queue] Antrean bertambah. Sisa antrean: ${messageQueue.length}`);
-  
+  console.log(
+    `📥 [Queue] Antrean bertambah. Sisa antrean: ${messageQueue.length}`,
+  );
+
   // Panggil pemroses antrean
   processQueue();
 }
@@ -32,31 +34,33 @@ export async function enqueueMessage(data: MessageData) {
 async function processQueue() {
   // Kalau mesin sedang sibuk memproses pesan lain, atau antrean kosong, diam saja
   if (isProcessing || messageQueue.length === 0) return;
-  
+
   isProcessing = true; // Kunci pintunya, mesin mulai bekerja
 
   while (messageQueue.length > 0) {
     const data = messageQueue.shift(); // Ambil antrean paling depan
-    
+
     if (data) {
       // Catat waktu proses ini agar orangnya terkena cooldown
       lastProcessedTime.set(data.idChat, Date.now());
 
       try {
-// Di dalam src/services/receiver/queue.ts (Bagian processQueue)
-        console.log(`🚀 [Memproses] Teks dari ${data.namaPanggilan}: \n"${data.teks}"`);
-        
+        // Di dalam src/services/receiver/queue.ts (Bagian processQueue)
+        console.log(
+          `🚀 [Memproses] Teks dari ${data.namaPanggilan}: \n"${data.teks}"`,
+        );
+
         // 👇 Ubah baris ini untuk menambahkan data.isReply dan data.teksDibalas
         await routeMessage(
-          data.teks, 
-          data.idChat, 
-          data.idPesan, 
-          data.namaPanggilan, 
-          data.isReply, 
-          data.teksDibalas
+          data.teks,
+          data.idChat,
+          data.idPesan,
+          data.namaPanggilan,
+          data.isReply,
+          data.teksDibalas,
         );
       } catch (e) {
-        console.error("❌ [Queue Error]:", e);
+        console.error('❌ [Queue Error]:', e);
       }
     }
   }

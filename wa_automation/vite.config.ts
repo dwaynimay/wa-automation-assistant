@@ -14,8 +14,8 @@ export default defineConfig({
           'api.groq.com',
           'lite.duckduckgo.com',
           'localhost',
-          '127.0.0.1'
-        ]
+          '127.0.0.1',
+        ],
       },
     }),
   ],

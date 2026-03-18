@@ -28,7 +28,12 @@ export async function processIncomingMessage(msg: any) {
 
     // 2. SIMPAN KE DATABASE
     await dbManager.saveUser(dataPesan.idChat, namaFix);
-    await dbManager.saveMessage(dataPesan.idPesan, dataPesan.idChat, role, dataPesan.teks);
+    await dbManager.saveMessage(
+      dataPesan.idPesan,
+      dataPesan.idChat,
+      role,
+      dataPesan.teks,
+    );
 
     // 3. JANGAN BALAS PESAN SENDIRI (Bot atau Owner)
     if (isFromMe) return;
@@ -38,8 +43,7 @@ export async function processIncomingMessage(msg: any) {
 
     // 5. LANJUT KE AI
     addMessageToStitcher(dataPesan);
-
   } catch (err) {
-    console.error("❌ Error di Processor:", err);
+    console.error('❌ Error di Processor:', err);
   }
 }

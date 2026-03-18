@@ -9,7 +9,7 @@ export const pingCommand: BotCommand = {
   execute: async (chatId, msgId, _args) => {
     const pingTime = Math.floor(Math.random() * 50) + 10;
     const balasPing = `🏓 Pong! Bot aktif bro.\nLatency: ${pingTime}ms`;
-    
+
     await sendHumanizedMessage(chatId, balasPing, msgId);
-  }
+  },
 };

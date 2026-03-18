@@ -11,7 +11,9 @@ export function passesFilter(msg: any, chatId: string): boolean {
     return false;
   }
   if (msg.isGroup && BOT_RULES.blacklistGroups.includes(chatId)) {
-    console.log(`🛑 [Filter] Pesan dari grup ${chatId} diabaikan (Masuk Blacklist)`);
+    console.log(
+      `🛑 [Filter] Pesan dari grup ${chatId} diabaikan (Masuk Blacklist)`,
+    );
     return false;
   }
 
@@ -21,7 +23,9 @@ export function passesFilter(msg: any, chatId: string): boolean {
     const adaDiWhitelist = BOT_RULES.whitelistNumbers.includes(chatId);
 
     if (!isKontak && !adaDiWhitelist) {
-      console.log(`🛑 [Filter] Pesan dari ${chatId} diabaikan (Bukan Kontak / Orang Asing)`);
+      console.log(
+        `🛑 [Filter] Pesan dari ${chatId} diabaikan (Bukan Kontak / Orang Asing)`,
+      );
       return false;
     }
   }
@@ -29,7 +33,9 @@ export function passesFilter(msg: any, chatId: string): boolean {
   // 3. CEK WHITELIST
   if (!msg.isGroup && BOT_RULES.whitelistNumbers.length > 0) {
     if (!BOT_RULES.whitelistNumbers.includes(chatId)) {
-      console.log(`🛑 [Filter] Pesan dari ${chatId} diabaikan (Tidak ada di Whitelist)`);
+      console.log(
+        `🛑 [Filter] Pesan dari ${chatId} diabaikan (Tidak ada di Whitelist)`,
+      );
       return false;
     }
   }

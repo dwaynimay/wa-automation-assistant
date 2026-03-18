@@ -11,7 +11,7 @@ export const memoryManager = {
     }
     return chatMemory[chatId];
   },
-  
+
   addMessage(chatId: string, message: ChatMessage) {
     const history = this.getHistory(chatId);
     history.push(message);
@@ -30,5 +30,5 @@ export const memoryManager = {
     if (ingatanPesan.has(msgId)) return true;
     ingatanPesan.add(msgId);
     return false;
-  }
+  },
 };

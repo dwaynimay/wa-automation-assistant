@@ -1,8 +1,8 @@
 /*
- * 
+ *
  * Type Definitions
- * 
- * berisi struktur data dari aplikasi yang digunakan 
+ *
+ * berisi struktur data dari aplikasi yang digunakan
  * Memusatkan tipe data di sini mencegah terjadinya error "undefined" di kemudian hari.
  * ============================================================================
  */
@@ -12,11 +12,11 @@ export type WPPType = any;
 
 // struktur pesan yang dikirim ke api llm
 export interface ChatMessage {
-  role: "system" | "user" | "assistant" | "tool"; 
-  
-  content?: string | null; 
+  role: 'system' | 'user' | 'assistant' | 'tool';
+
+  content?: string | null;
   // atribut untuk tool web search
-  tool_calls?: any[]; 
+  tool_calls?: any[];
   tool_call_id?: string;
   name?: string;
 }
@@ -30,8 +30,8 @@ export interface MessageData {
   // 2. Routing & Sender
   idChat: string;
   isGroup: boolean;
-  
-  pengirimAsli: string; 
+
+  pengirimAsli: string;
 
   // 3. Contact Info
   namaProfil: string;
@@ -58,11 +58,15 @@ export interface BotCommand {
   name: string;
   // penjelasan singkat command
   description: string;
-  
+
   /** * Fungsi inti yang dijalankan saat command dipanggil.
    * @param chatId ID obrolan tempat command diketik
    * @param msgId ID pesan untuk membalas spesifik (quoted reply)
    * @param args Argumen tambahan yang diketik setelah command (misal: !echo halo dunia)
    */
-  execute: (chatId: string, msgId: string, args: string[]) => Promise<void> | void;
+  execute: (
+    chatId: string,
+    msgId: string,
+    args: string[],
+  ) => Promise<void> | void;
 }

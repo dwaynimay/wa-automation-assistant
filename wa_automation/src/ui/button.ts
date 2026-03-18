@@ -2,7 +2,9 @@
 import { STATE } from '../config';
 import { tampilkanNotifikasi } from './toast';
 
-export function createToggleButton(btnContainerAsli: HTMLElement): HTMLElement | null {
+export function createToggleButton(
+  btnContainerAsli: HTMLElement,
+): HTMLElement | null {
   // Kloning container bawaan WA
   const cloneContainer = btnContainerAsli.cloneNode(true) as HTMLElement;
   const newButton = cloneContainer.querySelector('button');
@@ -18,7 +20,7 @@ export function createToggleButton(btnContainerAsli: HTMLElement): HTMLElement |
 
   // Animasi & Visual
   newButton.style.transition = 'all 0.2s ease';
-  
+
   const updateTampilan = () => {
     if (STATE.botAktif) {
       newButton.style.opacity = '1';
@@ -33,11 +35,11 @@ export function createToggleButton(btnContainerAsli: HTMLElement): HTMLElement |
   newButton.onclick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     STATE.botAktif = !STATE.botAktif;
-    
+
     updateTampilan();
-    
+
     const pesanNotif = STATE.botAktif ? 'Activated' : 'Deactivated';
     const tipeNotif = STATE.botAktif ? 'sukses' : 'error';
     tampilkanNotifikasi(pesanNotif, tipeNotif);
@@ -67,10 +69,10 @@ function replaceIconWithCustom(button: HTMLButtonElement) {
     iconWrapper.style.width = '100%';
 
     if (iconWrapper.parentElement) {
-        iconWrapper.parentElement.style.display = 'flex';
-        iconWrapper.parentElement.style.justifyContent = 'center';
-        iconWrapper.parentElement.style.alignItems = 'center';
-        iconWrapper.parentElement.style.width = '100%';
+      iconWrapper.parentElement.style.display = 'flex';
+      iconWrapper.parentElement.style.justifyContent = 'center';
+      iconWrapper.parentElement.style.alignItems = 'center';
+      iconWrapper.parentElement.style.width = '100%';
     }
   }
 }

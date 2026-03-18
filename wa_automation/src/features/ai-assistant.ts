@@ -7,21 +7,26 @@ import { searchInternet } from './web-search';
 // 🛠️ DAFTAR ALAT PERSIS SEPERTI DI SCRIPT LAMA
 const aiTools = [
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "searchInternet",
-      description: "Cari informasi terbaru di internet. Gunakan pertanyaan alami yang jelas seperti manusia mencari di Google.",
+      name: 'searchInternet',
+      description:
+        'Cari informasi terbaru di internet. Gunakan pertanyaan alami yang jelas seperti manusia mencari di Google.',
       parameters: {
-        type: "object",
-        properties: { query: { type: "string" } },
-        required: ["query"]
-      }
-    }
-  }
+        type: 'object',
+        properties: { query: { type: 'string' } },
+        required: ['query'],
+      },
+    },
+  },
 ];
 
 export async function askAI(
-  teksUser: string, idChat: string, senderName: string, isReply: boolean = false, teksDibalas: string | undefined = undefined
+  teksUser: string,
+  idChat: string,
+  senderName: string,
+  isReply: boolean = false,
+  teksDibalas: string | undefined = undefined,
 ): Promise<string | null> {
   try {
     if (!teksUser || teksUser.trim().length === 0) return null;
@@ -32,11 +37,14 @@ export async function askAI(
     }
 
     // 1. Simpan pesan user ke memori
-    memoryManager.addMessage(idChat, { role: "user", content: teksAkhir.substring(0, 800) });
+    memoryManager.addMessage(idChat, {
+      role: 'user',
+      content: teksAkhir.substring(0, 800),
+    });
 
     // 🧠 PROMPT PERSIS SEPERTI SCRIPT LAMA (Ditambah variabel nama pengirim)
     const systemMessage = {
-      role: "system",
+      role: 'system',
       content: `Kamu adalah asisten pribadi Farrel yang membantu membalas pesan WhatsApp ketika Farrel sedang sibuk.
 Lawan bicaramu saat ini adalah: ${senderName}.
 informasi Waktu saat ini: ${formatWaktuSekarang()} WIB.
@@ -59,37 +67,37 @@ https://...
 6. Jika user menanyakan Farrel secara langsung, jelaskan dengan sopan bahwa Farrel sedang cukup sibuk dan kamu membantu membalas pesan.
 7. Jangan pernah mengatakan bahwa kamu adalah AI atau bot.
 
-Balasan harus terasa seperti asisten pribadi yang ramah dan profesional.`
-    }; 
-    
+Balasan harus terasa seperti asisten pribadi yang ramah dan profesional.`,
+    };
+
     // 2. TEMBAKAN PERTAMA
     const payload1: any = {
       model: CONFIG.GROQ_MODEL,
       messages: [systemMessage, ...memoryManager.getHistory(idChat)],
       tools: aiTools,
-      tool_choice: "auto", // Kita kembalikan ke auto sesuai script lama
+      tool_choice: 'auto', // Kita kembalikan ke auto sesuai script lama
       temperature: 0.6,
       max_tokens: 1024,
-    }; 
-    
+    };
+
     const response1 = await fetchGroqAPI(payload1);
-    const messageAI = response1.choices[0].message; 
-    
+    const messageAI = response1.choices[0].message;
+
     // ==========================================
     // 🌐 JIKA AI BUTUH BROWSING (TOOL DIPANGGIL)
     // ==========================================
     if (messageAI.tool_calls && messageAI.tool_calls.length > 0) {
       const toolCall = messageAI.tool_calls[0];
       const args = JSON.parse(toolCall.function.arguments);
-      
-      const searchResult = await searchInternet(args.query); 
-      
-      memoryManager.addMessage(idChat, messageAI); 
+
+      const searchResult = await searchInternet(args.query);
+
+      memoryManager.addMessage(idChat, messageAI);
       memoryManager.addMessage(idChat, {
-        role: "tool",
+        role: 'tool',
         tool_call_id: toolCall.id,
-        name: "searchInternet",
-        content: searchResult
+        name: 'searchInternet',
+        content: searchResult,
       });
 
       // 3. TEMBAKAN KEDUA (Bawa Hasil Browsing)
@@ -97,27 +105,30 @@ Balasan harus terasa seperti asisten pribadi yang ramah dan profesional.`
         model: CONFIG.GROQ_MODEL,
         messages: [systemMessage, ...memoryManager.getHistory(idChat)],
         temperature: 0.6,
-        max_tokens: 1024
+        max_tokens: 1024,
       };
-      
+
       const response2 = await fetchGroqAPI(payload2);
       const finalReply = response2.choices[0].message.content.trim();
-      
-      memoryManager.addMessage(idChat, { role: "assistant", content: finalReply });
+
+      memoryManager.addMessage(idChat, {
+        role: 'assistant',
+        content: finalReply,
+      });
       return finalReply;
     }
 
     // ==========================================
     // 💬 JIKA AI HANYA NGOBROL BIASA
     // ==========================================
-    const reply = messageAI.content ? messageAI.content.trim() : "Hmm...";
-    memoryManager.addMessage(idChat, { role: "assistant", content: reply }); 
+    const reply = messageAI.content ? messageAI.content.trim() : 'Hmm...';
+    memoryManager.addMessage(idChat, { role: 'assistant', content: reply });
     return reply;
-    
   } catch (error: any) {
-    console.error("❌ [askAI Error]:", error);
+    console.error('❌ [askAI Error]:', error);
     memoryManager.removeLastMessage(idChat);
-    const errMsg = typeof error === 'string' ? error : (error?.message || "Tidak diketahui");
+    const errMsg =
+      typeof error === 'string' ? error : error?.message || 'Tidak diketahui';
     return `Maaf ya, sistemku lagi ada gangguan sebentar 🙏\n\nDetail: ${errMsg}`;
   }
 }

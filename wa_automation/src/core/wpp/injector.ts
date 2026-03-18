@@ -1,14 +1,13 @@
 /*
- * 
+ *
  * menyuntikkan library WPPConnect ke website
- * 
+ *
  */
 
 import { getWPP } from './instance';
 
 export function injectWajs(): Promise<void> {
   return new Promise((resolve) => {
-
     // cek ketersediaan wpp
     if (getWPP()) {
       console.log('[WPP] loaded');
@@ -16,8 +15,9 @@ export function injectWajs(): Promise<void> {
     }
 
     // inject library wpp
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/@wppconnect/wa-js@latest/dist/wppconnect-wa.js";
+    const script = document.createElement('script');
+    script.src =
+      'https://cdn.jsdelivr.net/npm/@wppconnect/wa-js@latest/dist/wppconnect-wa.js';
     script.async = true;
 
     script.onload = () => {
