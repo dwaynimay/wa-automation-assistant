@@ -3,10 +3,11 @@
 // Orkestrator utama: menerima pesan mentah, mengekstrak, memvalidasi,
 // lalu memutuskan apakah pesan ini perlu dibalas bot atau tidak.
 
-import { runtimeState }          from '../../config';          // ✅
-import { extractMessageData }    from './extractor';
-import { passesFilter }          from './filter';
-import { addMessageToStitcher }  from './stitcher';
+import { runtimeState } from '../../config';
+import { dbManager } from '../../core';
+import { extractMessageData } from './extractor';
+import { passesFilter } from './filter';
+import { addMessageToStitcher } from './stitcher';
 
 export async function processIncomingMessage(msg: unknown): Promise<void> {
   try {
@@ -15,7 +16,7 @@ export async function processIncomingMessage(msg: unknown): Promise<void> {
     // Abaikan pesan yang bukan teks biasa (gambar, sticker, dll tanpa teks)
     if (!dataPesan.teks || dataPesan.tipePesan !== 'chat') return;
 
-    const m        = msg as Record<string, any>;
+    const m = msg as Record<string, any>;
     const isFromMe = m?.id?.fromMe === true;
 
     // --- Tentukan role pengirim ---
@@ -24,17 +25,22 @@ export async function processIncomingMessage(msg: unknown): Promise<void> {
 
     if (isFromMe) {
       if (dataPesan.teks === runtimeState.lastBotText) {
-        role    = 'bot';
+        role = 'bot';
         namaFix = 'BOT AI';
       } else {
-        role    = 'owner';
+        role = 'owner';
         namaFix = 'Owner';
       }
     }
 
     // TODO: Simpan ke database saat dbManager sudah siap
-    // await dbManager.saveUser(dataPesan.idChat, namaFix);
-    // await dbManager.saveMessage(dataPesan.idPesan, dataPesan.idChat, role, dataPesan.teks);
+    await dbManager.saveUser(dataPesan.idChat, namaFix);
+    await dbManager.saveMessage(
+      dataPesan.idPesan,
+      dataPesan.idChat,
+      role,
+      dataPesan.teks,
+    );
     console.log(`[Processor] Role: ${role} | Nama: ${namaFix}`);
 
     // Jangan balas pesan dari diri sendiri (bot maupun owner mengetik manual)
@@ -50,7 +56,6 @@ export async function processIncomingMessage(msg: unknown): Promise<void> {
 
     // Lulus semua pengecekan — serahkan ke stitcher untuk dikumpulkan sebelum dibalas
     addMessageToStitcher(dataPesan);
-
   } catch (err) {
     console.error('[Processor] Error tidak tertangani:', err);
   }
