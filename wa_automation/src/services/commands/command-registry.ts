@@ -1,5 +1,5 @@
-import { BotCommand } from '../types';
-import { pingCommand } from '../features/ping';
+import { BotCommand } from '../../types';
+import { pingCommand } from '../../features/ping';
 
 // Menggunakan Map agar performa pencarian command lebih cepat (O(1))
 const registry = new Map<string, BotCommand>();

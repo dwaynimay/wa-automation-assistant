@@ -1,8 +1,9 @@
+// File: src/main.ts
 import { CONFIG } from './config';
-import { getWPP } from './core/wpp/instance';
-import { injectWajs } from './core/wpp/injector';
-import { injectSidebarUI } from './ui/sidebar';
-import { setupMessageListener } from './services/receiver/listener';
+import { getWPP, injectWajs } from './core/wpp';
+import { injectSidebarUI } from './ui';
+import { setupMessageListener } from './services/receiver';
+import { setupShortcuts } from './features/cek-jid'; // Import fitur baru
 
 async function start() {
   console.log("🚀 ========================================");
@@ -22,35 +23,10 @@ async function start() {
       clearInterval(wppCheckInterval);
       console.log('✅ WPP Ready! Menjalankan services...');
       
+      // Jalankan semua layanan
       injectSidebarUI();
       setupMessageListener(); 
-
-      // ==========================================
-      // 🔍 FITUR SHORTCUT CEK JID (ALT + C)
-      // ==========================================
-      window.addEventListener('keydown', async (e) => {
-        // Jika user menekan kombinasi Alt + C di keyboard
-        if (e.altKey && e.key.toLowerCase() === 'c') {
-          try {
-            const activeChat = await WPP.chat.getActiveChat();
-            
-            if (activeChat) {
-              // Ambil ID-nya
-              const jid = activeChat.id._serialized || activeChat.id;
-              const nama = activeChat.name || "Tidak diketahui";
-              
-              // Tampilkan pop-up prompt bawaan browser supaya teksnya bisa langsung di-copy
-              window.prompt(`🔑 ID milik [${nama}]:\nSilakan copy teks di bawah ini:`, jid);
-            } else {
-              alert("Buka dulu obrolan orang atau grupnya di layar, baru tekan Alt + C!");
-            }
-          } catch (err) {
-            console.error("Gagal mengambil JID:", err);
-          }
-        }
-      });
-      // ==========================================
-
+      setupShortcuts(); // ⌨️ Aktifkan Shortcut Alt + C
     }
   }, 1000);
 }
