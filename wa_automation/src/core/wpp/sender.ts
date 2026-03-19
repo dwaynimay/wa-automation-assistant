@@ -72,7 +72,6 @@ export async function sendHumanizedMessage(
 
     await WPP.chat.sendTextMessage(to, text, options);
     console.log(`[WPP Sender] Pesan terkirim ke: ${to}`);
-
   } catch (error) {
     console.error('[WPP Sender] Gagal mengirim pesan:', error);
   }

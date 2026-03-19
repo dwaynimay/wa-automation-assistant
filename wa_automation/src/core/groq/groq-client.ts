@@ -35,7 +35,9 @@ export interface GroqResponse {
   }>;
 }
 
-export async function fetchGroqApi(payload: GroqPayload): Promise<GroqResponse> {
+export async function fetchGroqApi(
+  payload: GroqPayload,
+): Promise<GroqResponse> {
   return new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: 'POST',
@@ -56,9 +58,13 @@ export async function fetchGroqApi(payload: GroqPayload): Promise<GroqResponse> 
             if (errObj?.error?.message) {
               errorDetail = errObj.error.message;
             }
-          } catch { /* body bukan JSON, pakai responseText apa adanya */ }
+          } catch {
+            /* body bukan JSON, pakai responseText apa adanya */
+          }
 
-          console.error(`[Groq Client] API Error ${res.status}: ${errorDetail}`);
+          console.error(
+            `[Groq Client] API Error ${res.status}: ${errorDetail}`,
+          );
           reject(new Error(`API Error ${res.status}: ${errorDetail}`));
           return;
         }
@@ -66,12 +72,16 @@ export async function fetchGroqApi(payload: GroqPayload): Promise<GroqResponse> 
         try {
           resolve(JSON.parse(res.responseText) as GroqResponse);
         } catch {
-          reject(new Error('[Groq Client] Gagal mem-parse response dari Groq.'));
+          reject(
+            new Error('[Groq Client] Gagal mem-parse response dari Groq.'),
+          );
         }
       },
 
-      onerror: () => reject(new Error('[Groq Client] Koneksi ke server Groq terputus.')),
-      ontimeout: () => reject(new Error('[Groq Client] Request timeout setelah 30 detik.')),
+      onerror: () =>
+        reject(new Error('[Groq Client] Koneksi ke server Groq terputus.')),
+      ontimeout: () =>
+        reject(new Error('[Groq Client] Request timeout setelah 30 detik.')),
     });
   });
 }

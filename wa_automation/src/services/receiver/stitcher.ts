@@ -5,9 +5,9 @@
 // kedua pesan digabung menjadi satu sebelum dikirim ke antrean.
 // Ini membuat bot tidak membalas terburu-buru saat orang masih mengetik.
 
-import type { MessageData }   from '../../shared/types';    // ✅
-import { STITCHER_WAIT_MS }   from '../../shared/constants'; // ✅
-import { enqueueMessage }     from './queue';
+import type { MessageData } from '../../shared/types'; // ✅
+import { STITCHER_WAIT_MS } from '../../shared/constants'; // ✅
+import { enqueueMessage } from './queue';
 
 interface StitchBuffer {
   data: MessageData;
@@ -28,9 +28,14 @@ export function addMessageToStitcher(data: MessageData): void {
 
     // Reset timer dari nol
     clearTimeout(existing.timer);
-    existing.timer = setTimeout(() => finishStitching(idChat), STITCHER_WAIT_MS);
+    existing.timer = setTimeout(
+      () => finishStitching(idChat),
+      STITCHER_WAIT_MS,
+    );
 
-    console.log(`[Stitcher] Pesan dari ${data.namaPanggilan} dijahit, timer di-reset.`);
+    console.log(
+      `[Stitcher] Pesan dari ${data.namaPanggilan} dijahit, timer di-reset.`,
+    );
   } else {
     // Pesan pertama dari orang ini — mulai timer baru
     const timer = setTimeout(() => finishStitching(idChat), STITCHER_WAIT_MS);
@@ -45,6 +50,8 @@ function finishStitching(idChat: string): void {
   if (!buffer) return;
 
   stitchBuffers.delete(idChat);
-  console.log(`[Stitcher] Timer habis, pesan dari ${buffer.data.namaPanggilan} dikirim ke queue.`);
+  console.log(
+    `[Stitcher] Timer habis, pesan dari ${buffer.data.namaPanggilan} dikirim ke queue.`,
+  );
   enqueueMessage(buffer.data);
 }

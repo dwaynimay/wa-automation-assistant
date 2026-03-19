@@ -4,7 +4,7 @@
 // Tugasnya SATU: dengarkan event dari WPP, lalu lempar ke processor.
 // Tidak ada logika bisnis di sini.
 
-import { getWPP } from '../../core/wpp';              // ✅ via barrel
+import { getWPP } from '../../core/wpp'; // ✅ via barrel
 import { processIncomingMessage } from './processor';
 
 export function setupMessageListener(): void {
@@ -12,7 +12,9 @@ export function setupMessageListener(): void {
 
   // Guard: pastikan WPP sudah tersedia sebelum mendaftar listener
   if (!WPP) {
-    console.error('[Listener] WPP belum siap. Listener tidak dapat didaftarkan.');
+    console.error(
+      '[Listener] WPP belum siap. Listener tidak dapat didaftarkan.',
+    );
     return;
   }
 

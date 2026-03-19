@@ -8,7 +8,7 @@
 // Untuk persistensi, nanti bisa diganti dengan database.
 
 import type { ChatMessage } from '../../shared/types'; // ✅
-import { appConfig }        from '../../config';        // ✅
+import { appConfig } from '../../config'; // ✅
 
 // Penyimpanan percakapan: key = idChat, value = array pesan
 const chatMemory: Record<string, ChatMessage[]> = {};
@@ -17,7 +17,6 @@ const chatMemory: Record<string, ChatMessage[]> = {};
 const processedMessageIds = new Set<string>();
 
 export const memoryManager = {
-
   // Ambil riwayat percakapan untuk satu chat (buat array kosong jika belum ada)
   getHistory(chatId: string): ChatMessage[] {
     if (!chatMemory[chatId]) {

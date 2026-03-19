@@ -45,7 +45,9 @@ function postToBackend(endpoint: string, data: object): Promise<void> {
         if (res.status === 200) {
           resolve();
         } else {
-          console.warn(`[DB Client] Respons tidak OK dari ${endpoint}: ${res.status}`);
+          console.warn(
+            `[DB Client] Respons tidak OK dari ${endpoint}: ${res.status}`,
+          );
           resolve(); // tetap resolve agar tidak memblokir alur utama
         }
       },
@@ -53,13 +55,15 @@ function postToBackend(endpoint: string, data: object): Promise<void> {
       onerror: () => {
         console.error(
           `[DB Client] Gagal terhubung ke Python server di ${DB_API_URL}.\n` +
-          `Pastikan backend/server.py sudah berjalan dengan: python backend/server.py`
+            `Pastikan backend/server.py sudah berjalan dengan: python backend/server.py`,
         );
         resolve(); // tetap resolve — kegagalan DB tidak boleh menghentikan bot
       },
 
       ontimeout: () => {
-        console.warn(`[DB Client] Timeout menghubungi ${endpoint}. Server mungkin lambat.`);
+        console.warn(
+          `[DB Client] Timeout menghubungi ${endpoint}. Server mungkin lambat.`,
+        );
         resolve();
       },
     });
@@ -67,7 +71,6 @@ function postToBackend(endpoint: string, data: object): Promise<void> {
 }
 
 export const dbManager = {
-
   // Simpan atau perbarui profil pengguna
   async saveUser(jid: string, nama: string): Promise<void> {
     const payload: SaveUserPayload = { jid, nama };
@@ -84,6 +87,8 @@ export const dbManager = {
   ): Promise<void> {
     const payload: SaveMessagePayload = { id: msgId, jid, role, content };
     await postToBackend('/save_message', payload);
-    console.log(`[DB Client] Pesan tersimpan: [${role}] ${content.substring(0, 30)}...`);
+    console.log(
+      `[DB Client] Pesan tersimpan: [${role}] ${content.substring(0, 30)}...`,
+    );
   },
 };

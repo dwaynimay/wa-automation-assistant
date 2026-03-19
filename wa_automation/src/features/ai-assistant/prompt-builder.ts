@@ -5,12 +5,13 @@
 // menyentuh logika pemanggilan API.
 
 import { formatIndonesianDate } from '../../shared/utils'; // ✅
-import type { ChatMessage }      from '../../shared/types'; // ✅
+import type { ChatMessage } from '../../shared/types'; // ✅
 
 export function buildSystemPrompt(senderName: string): ChatMessage {
   return {
     role: 'system',
-    content: `Kamu adalah asisten pribadi Farrel yang membantu membalas pesan WhatsApp ketika Farrel sedang sibuk.
+    content: `
+Kamu adalah asisten pribadi Farrel yang membantu membalas pesan WhatsApp ketika Farrel sedang sibuk.
 Lawan bicaramu saat ini adalah: ${senderName}.
 Informasi waktu saat ini: ${formatIndonesianDate()} WIB.
 

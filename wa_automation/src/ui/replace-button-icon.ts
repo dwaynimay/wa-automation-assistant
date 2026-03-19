@@ -28,11 +28,13 @@ export function replaceButtonIcon(button: HTMLButtonElement): void {
   iconWrapper.appendChild(robotIcon);
 
   // Pastikan ikon berada di tengah wrapper
-  iconWrapper.style.cssText = 'display: flex; justify-content: center; align-items: center; width: 100%;';
+  iconWrapper.style.cssText =
+    'display: flex; justify-content: center; align-items: center; width: 100%;';
 
   // Terapkan juga ke parent wrapper jika ada
   const parent = iconWrapper.parentElement;
   if (parent instanceof HTMLElement) {
-    parent.style.cssText = 'display: flex; justify-content: center; align-items: center; width: 100%;';
+    parent.style.cssText =
+      'display: flex; justify-content: center; align-items: center; width: 100%;';
   }
 }

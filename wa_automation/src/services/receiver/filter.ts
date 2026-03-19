@@ -5,7 +5,10 @@
 
 import { botRules } from '../../config'; // ✅ via barrel
 
-export function passesFilter(msg: Record<string, any>, chatId: string): boolean {
+export function passesFilter(
+  msg: Record<string, any>,
+  chatId: string,
+): boolean {
   // Tolak pesan status WhatsApp
   if (msg.isStatusV3 && !botRules.respondToStatus) return false;
 
@@ -27,10 +30,12 @@ export function passesFilter(msg: Record<string, any>, chatId: string): boolean 
 
   // Cek mode "hanya balas kontak" — orang asing yang tidak di whitelist ditolak
   if (botRules.onlyReplyToContacts && !msg.isGroup) {
-    const isKontak       = msg.sender?.isMyContact ?? false;
+    const isKontak = msg.sender?.isMyContact ?? false;
     const adaDiWhitelist = botRules.whitelistNumbers.includes(chatId);
     if (!isKontak && !adaDiWhitelist) {
-      console.log(`[Filter] Diabaikan — bukan kontak & tidak di whitelist: ${chatId}`);
+      console.log(
+        `[Filter] Diabaikan — bukan kontak & tidak di whitelist: ${chatId}`,
+      );
       return false;
     }
   }
@@ -38,7 +43,9 @@ export function passesFilter(msg: Record<string, any>, chatId: string): boolean 
   // Cek whitelist nomor (jika whitelist aktif/tidak kosong)
   if (botRules.whitelistNumbers.length > 0 && !msg.isGroup) {
     if (!botRules.whitelistNumbers.includes(chatId)) {
-      console.log(`[Filter] Diabaikan — tidak ada di whitelist nomor: ${chatId}`);
+      console.log(
+        `[Filter] Diabaikan — tidak ada di whitelist nomor: ${chatId}`,
+      );
       return false;
     }
   }

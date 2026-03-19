@@ -4,10 +4,10 @@
 // router memutuskan "pesan ini harus diapakan?"
 // Prioritas: command manual (!ping) → AI assistant.
 
-import { runtimeState }      from '../../config';              // ✅
-import { sendHumanizedMessage } from '../../core/wpp';         // ✅
-import { askAI }             from '../../features/ai-assistant'; // ✅
-import { getCommand }        from './commands';                 // ✅ via barrel baru
+import { runtimeState } from '../../config'; // ✅
+import { sendHumanizedMessage } from '../../core/wpp'; // ✅
+import { askAI } from '../../features/ai-assistant'; // ✅
+import { getCommand } from './commands'; // ✅ via barrel baru
 
 export async function routeMessage(
   text: string,
@@ -17,10 +17,9 @@ export async function routeMessage(
   isReply: boolean = false,
   teksDibalas?: string,
 ): Promise<void> {
-
   // Rute 1: Command manual (diawali tanda seru, contoh: !ping)
   if (text.startsWith('!')) {
-    const args        = text.slice(1).split(' ');
+    const args = text.slice(1).split(' ');
     const commandName = args.shift()?.toLowerCase();
 
     if (commandName) {

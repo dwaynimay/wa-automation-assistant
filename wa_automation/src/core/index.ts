@@ -7,6 +7,5 @@ export { getWPP, injectWajs, sendHumanizedMessage } from './wpp';
 export type { GroqPayload, GroqResponse } from './groq';
 export { fetchGroqApi } from './groq';
 
-
 export type { MessageRole } from './database';
 export { dbManager } from './database';

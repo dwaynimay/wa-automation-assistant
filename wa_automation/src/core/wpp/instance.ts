@@ -13,7 +13,11 @@ export interface WPPInstance {
   chat: {
     markIsRead: (chatId: string) => Promise<void>;
     markIsComposing: (chatId: string, duration: number) => Promise<void>;
-    sendTextMessage: (to: string, text: string, options?: object) => Promise<void>;
+    sendTextMessage: (
+      to: string,
+      text: string,
+      options?: object,
+    ) => Promise<void>;
     getMessageById: (msgId: string) => Promise<any>;
     getActiveChat: () => Promise<any>;
   };

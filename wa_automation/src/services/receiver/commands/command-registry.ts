@@ -5,7 +5,7 @@
 // Untuk menambah command baru, cukup import dan panggil registerCommand() di bawah.
 
 import type { BotCommand } from '../../../shared/types'; // ✅
-import { pingCommand }     from '../../../features/commands'; // ✅ (akan kita buat di sesi features)
+import { pingCommand } from '../../../features/commands'; // ✅ (akan kita buat di sesi features)
 
 const registry = new Map<string, BotCommand>();
 

@@ -3,8 +3,8 @@
 // Fitur shortcut keyboard untuk developer/owner.
 // Alt + C: Ambil JID (ID chat) dari percakapan yang sedang dibuka.
 
-import { getWPP }            from '../../core/wpp';  // ✅
-import { tampilkanNotifikasi } from '../../ui';       // ✅
+import { getWPP } from '../../core/wpp'; // ✅
+import { tampilkanNotifikasi } from '../../ui'; // ✅
 
 export function setupShortcuts(): void {
   window.addEventListener('keydown', async (e) => {
@@ -20,7 +20,7 @@ export function setupShortcuts(): void {
         const activeChat = await WPP.chat.getActiveChat();
 
         if (activeChat) {
-          const jid  = activeChat.id._serialized ?? activeChat.id;
+          const jid = activeChat.id._serialized ?? activeChat.id;
           const nama = activeChat.name ?? 'Tidak diketahui';
           window.prompt(`🔑 JID [${nama}]:`, jid);
         } else {

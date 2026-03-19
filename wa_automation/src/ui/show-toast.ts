@@ -10,16 +10,16 @@
 export type ToastVariant = 'success' | 'error';
 
 export function showToast(message: string, variant: ToastVariant): void {
-  const TOAST_ID     = 'bot-toast-notif';
-  const WARNA_BG     = variant === 'success' ? '#1DAA61' : '#f44336';
-  const DURASI_MS    = 2_000;
-  const FADE_MS      = 500;
+  const TOAST_ID = 'bot-toast-notif';
+  const WARNA_BG = variant === 'success' ? '#1DAA61' : '#f44336';
+  const DURASI_MS = 2_000;
+  const FADE_MS = 500;
 
   // Hapus toast yang mungkin masih tampil sebelum membuat yang baru
   document.getElementById(TOAST_ID)?.remove();
 
   const toast = document.createElement('div');
-  toast.id       = TOAST_ID;
+  toast.id = TOAST_ID;
   toast.textContent = message;
   toast.style.cssText = `
     position: fixed;

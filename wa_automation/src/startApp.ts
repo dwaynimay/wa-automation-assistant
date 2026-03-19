@@ -7,12 +7,12 @@
 //   3. Tunggu hingga WPP benar-benar siap
 //   4. Jalankan semua services dan UI
 
-import { validateAppConfig }     from './config';                   // ✅
-import { getWPP, injectWajs }    from './core/wpp';                  // ✅
-import { setupMessageListener }  from './services/receiver';         // ✅
-import { setupShortcuts }        from './features/cek-jid';          // ✅ aktif kembali
-import { injectSidebarUi }       from './ui';                        // ✅
-import { WPP_READY_POLL_INTERVAL_MS } from './shared/constants';     // ✅ dari shared
+import { validateAppConfig } from './config'; // ✅
+import { getWPP, injectWajs } from './core/wpp'; // ✅
+import { setupMessageListener } from './services/receiver'; // ✅
+import { setupShortcuts } from './features/cek-jid'; // ✅ aktif kembali
+import { injectSidebarUi } from './ui'; // ✅
+import { WPP_READY_POLL_INTERVAL_MS } from './shared/constants'; // ✅ dari shared
 
 export async function startApp(): Promise<void> {
   try {
@@ -30,11 +30,12 @@ export async function startApp(): Promise<void> {
 
     // Tahap 4: Semua siap — jalankan services dan UI
     startServices();
-
   } catch (error: unknown) {
     // Tampilkan pesan error yang informatif berdasarkan jenisnya
     if (error instanceof Error) {
-      console.error(`❌ [startApp] Gagal menjalankan aplikasi: ${error.message}`);
+      console.error(
+        `❌ [startApp] Gagal menjalankan aplikasi: ${error.message}`,
+      );
     } else {
       console.error('❌ [startApp] Terjadi error tidak dikenal:', error);
     }

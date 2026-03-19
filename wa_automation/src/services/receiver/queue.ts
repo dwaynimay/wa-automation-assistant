@@ -4,21 +4,23 @@
 // Memastikan pesan diproses satu per satu (tidak paralel)
 // dan satu orang tidak bisa membanjiri bot dalam waktu singkat.
 
-import type { MessageData }        from '../../shared/types';      // ✅
-import { ANTI_SPAM_COOLDOWN_MS }   from '../../shared/constants';  // ✅
-import { routeMessage }            from './router';
+import type { MessageData } from '../../shared/types'; // ✅
+import { ANTI_SPAM_COOLDOWN_MS } from '../../shared/constants'; // ✅
+import { routeMessage } from './router';
 
-const messageQueue: MessageData[]              = [];
+const messageQueue: MessageData[] = [];
 const lastProcessedTime = new Map<string, number>();
-let isProcessing                               = false;
+let isProcessing = false;
 
 export async function enqueueMessage(data: MessageData): Promise<void> {
-  const now      = Date.now();
+  const now = Date.now();
   const lastTime = lastProcessedTime.get(data.idChat) ?? 0;
 
   // Sistem anti-spam: abaikan jika orang ini baru saja diproses
   if (now - lastTime < ANTI_SPAM_COOLDOWN_MS) {
-    console.log(`[Queue] Anti-spam aktif — mengabaikan pesan dari: ${data.namaPanggilan}`);
+    console.log(
+      `[Queue] Anti-spam aktif — mengabaikan pesan dari: ${data.namaPanggilan}`,
+    );
     return;
   }
 

@@ -4,9 +4,13 @@
 // Mengkloning container tombol WhatsApp yang sudah ada (agar style-nya sama),
 // lalu menggantinya dengan ikon dan behavior milik kita.
 
-import { TOGGLE_BUTTON_ID, TOGGLE_BUTTON_ARIA_LABEL, TOGGLE_BUTTON_TITLE } from './ui-constants';
-import { replaceButtonIcon }       from './replace-button-icon';
-import { showToast }               from './show-toast';
+import {
+  TOGGLE_BUTTON_ID,
+  TOGGLE_BUTTON_ARIA_LABEL,
+  TOGGLE_BUTTON_TITLE,
+} from './ui-constants';
+import { replaceButtonIcon } from './replace-button-icon';
+import { showToast } from './show-toast';
 import { updateToggleButtonState } from './update-toggle-button-state';
 
 // Tipe opsi untuk pembuatan tombol — diekspor agar bisa dipakai
@@ -20,10 +24,9 @@ export function createToggleButton(
   originalContainer: HTMLElement,
   options: ToggleButtonOptions,
 ): HTMLElement | null {
-
   // Klon container asli agar mewarisi semua class dan style WhatsApp
   const cloneContainer = originalContainer.cloneNode(true) as HTMLElement;
-  const button         = cloneContainer.querySelector('button');
+  const button = cloneContainer.querySelector('button');
 
   // Guard: pastikan ada elemen button di dalam container
   if (!(button instanceof HTMLButtonElement)) {

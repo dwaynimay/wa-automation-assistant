@@ -7,5 +7,5 @@ export { setupMessageListener } from './listener';
 
 // Internal exports (opsional, untuk keperluan testing di masa depan)
 export { processIncomingMessage } from './processor';
-export { routeMessage }           from './router';
-export { enqueueMessage }         from './queue';
+export { routeMessage } from './router';
+export { enqueueMessage } from './queue';

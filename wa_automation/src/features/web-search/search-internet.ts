@@ -15,31 +15,38 @@ export function searchInternet(query: string): Promise<string> {
       url: 'https://lite.duckduckgo.com/lite/',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
       data: `q=${encodeURIComponent(query)}`,
 
       onload(response) {
         try {
           const parser = new DOMParser();
-          const doc    = parser.parseFromString(response.responseText, 'text/html');
+          const doc = parser.parseFromString(
+            response.responseText,
+            'text/html',
+          );
 
-          const links    = doc.querySelectorAll('.result-link');
+          const links = doc.querySelectorAll('.result-link');
           const snippets = doc.querySelectorAll('.result-snippet');
           const results: string[] = [];
 
           if (links.length > 0) {
             const batas = Math.min(3, links.length);
             for (let i = 0; i < batas; i++) {
-              const title   = links[i].textContent?.trim() ?? 'Tanpa Judul';
-              const snippet = snippets[i]?.textContent?.trim() ?? 'Tidak ada detail.';
+              const title = links[i].textContent?.trim() ?? 'Tanpa Judul';
+              const snippet =
+                snippets[i]?.textContent?.trim() ?? 'Tidak ada detail.';
 
               // Dekode URL tracking DuckDuckGo ke URL asli
               let url = links[i].getAttribute('href') ?? 'Link tidak diketahui';
               if (url.includes('uddg=')) {
                 try {
                   url = decodeURIComponent(url.split('uddg=')[1].split('&')[0]);
-                } catch { /* biarkan url apa adanya */ }
+                } catch {
+                  /* biarkan url apa adanya */
+                }
               }
 
               results.push(`Judul: ${title}\nInfo: ${snippet}\nLink: ${url}`);
@@ -55,7 +62,6 @@ export function searchInternet(query: string): Promise<string> {
           const finalResult = results.join('\n\n');
           console.log('[WebSearch] Hasil ditemukan.');
           resolve(finalResult);
-
         } catch (e) {
           console.error('[WebSearch] Gagal parsing hasil:', e);
           resolve('Gagal membaca hasil pencarian web.');

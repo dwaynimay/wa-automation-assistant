@@ -30,7 +30,9 @@ export function injectWajs(): Promise<void> {
     script.onerror = () => {
       // Kita resolve (bukan reject) agar app tetap lanjut,
       // tapi kita log error agar mudah di-debug.
-      console.error('[WPP Injector] Gagal memuat library dari CDN. Cek koneksi internet.');
+      console.error(
+        '[WPP Injector] Gagal memuat library dari CDN. Cek koneksi internet.',
+      );
       resolve();
     };
 
