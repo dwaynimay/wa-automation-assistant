@@ -1,10 +1,4 @@
 # backend/app/database.py
-#
-# Semua hal yang berhubungan dengan SQLite ada di sini:
-# - Membuat koneksi
-# - Inisialisasi tabel
-#
-# Tidak ada logika bisnis di file ini — murni infrastruktur data.
 
 import sqlite3
 from contextlib import contextmanager
@@ -13,17 +7,8 @@ from app.config import Config
 
 @contextmanager
 def get_db():
-    """
-    Context manager untuk koneksi database.
-    Pemakaian:
-        with get_db() as conn:
-            conn.execute(...)
-
-    Koneksi otomatis ditutup setelah blok 'with' selesai,
-    bahkan jika terjadi exception di tengah jalan.
-    """
     conn = sqlite3.connect(Config.DB_FILE)
-    conn.row_factory = sqlite3.Row  # hasil query bisa diakses seperti dict
+    conn.row_factory = sqlite3.Row
     try:
         yield conn
     finally:
@@ -31,32 +16,60 @@ def get_db():
 
 
 def init_db() -> None:
-    """
-    Buat semua tabel jika belum ada.
-    Dipanggil SATU KALI saat server pertama kali dijalankan.
-    Aman dijalankan berulang kali (CREATE TABLE IF NOT EXISTS).
-    """
     with get_db() as conn:
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA foreign_keys = ON")
+
         conn.executescript("""
-            CREATE TABLE IF NOT EXISTS users (
-                jid       TEXT PRIMARY KEY,
-                nama      TEXT,
-                kategori  TEXT     DEFAULT 'unknown',
-                catatan   TEXT,
-                last_seen DATETIME DEFAULT CURRENT_TIMESTAMP
+
+            -- ─── contacts ─────────────────────────────────────────────────────
+            CREATE TABLE IF NOT EXISTS contacts (
+                jid          TEXT    PRIMARY KEY,
+                pushname     TEXT,
+                is_whitelist INTEGER NOT NULL DEFAULT 0
+                             CHECK(is_whitelist IN (0, 1)),
+                created_at   INTEGER NOT NULL DEFAULT (unixepoch())
             );
 
-            CREATE TABLE IF NOT EXISTS messages (
-                id              TEXT PRIMARY KEY,
-                jid             TEXT     NOT NULL,
-                role            TEXT     NOT NULL
-                                CHECK(role IN ('user', 'bot', 'owner')),
-                content         TEXT,
-                sentiment_score REAL     DEFAULT 0.0,
-                emotion_label   TEXT     DEFAULT 'neutral',
-                timestamp       DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (jid) REFERENCES users(jid)
+            -- ─── chats ────────────────────────────────────────────────────────
+            CREATE TABLE IF NOT EXISTS chats (
+                chat_jid      TEXT    PRIMARY KEY,
+                chat_name     TEXT,
+                is_group      INTEGER NOT NULL DEFAULT 0
+                              CHECK(is_group IN (0, 1)),
+                is_bot_active INTEGER NOT NULL DEFAULT 1
+                              CHECK(is_bot_active IN (0, 1))
             );
+
+            -- ─── messages ─────────────────────────────────────────────────────
+            CREATE TABLE IF NOT EXISTS messages (
+                message_id        TEXT    PRIMARY KEY,
+                chat_jid          TEXT    NOT NULL
+                                  REFERENCES chats(chat_jid) ON DELETE CASCADE,
+                sender_jid        TEXT    NOT NULL
+                                  REFERENCES contacts(jid) ON DELETE CASCADE,
+                is_from_me        INTEGER NOT NULL CHECK(is_from_me IN (0, 1)),
+                role              TEXT    NOT NULL CHECK(role IN ('user', 'assistant')),
+                message_type      TEXT    NOT NULL
+                                  CHECK(message_type IN (
+                                      'chat', 'image', 'video', 'audio',
+                                      'ptt', 'document', 'sticker', 'reply'
+                                  )),
+                content           TEXT,
+                quoted_message_id TEXT,
+                media_file_path   TEXT,
+                media_mime_type   TEXT,
+                media_size        INTEGER,
+                timestamp         INTEGER NOT NULL
+            );
+
+            -- ─── Index untuk RAG ──────────────────────────────────────────────
+            CREATE INDEX IF NOT EXISTS idx_messages_chat
+                ON messages(chat_jid);
+
+            CREATE INDEX IF NOT EXISTS idx_messages_timestamp
+                ON messages(timestamp);
+
         """)
         conn.commit()
 

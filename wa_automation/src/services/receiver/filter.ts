@@ -1,59 +1,69 @@
 // src/services/receiver/filter.ts
 //
 // Penjaga gerbang: memutuskan apakah sebuah pesan layak diproses bot.
-// Urutan pengecekan: Status → fromMe → Grup → Blacklist → Kontak → Whitelist.
+// Urutan pengecekan: Blacklist → Whitelist → onlyReplyToContacts → respondTo flags
 
-import { botRules } from '../../config'; // ✅ via barrel
+import { botRules } from '../../config';
 
 export function passesFilter(
   msg: Record<string, any>,
   chatId: string,
 ): boolean {
-  // Tolak pesan status WhatsApp
-  if (msg.isStatusV3 && !botRules.respondToStatus) return false;
+  const isGroup = msg.isGroup ?? false;
 
-  // Tolak pesan dari diri sendiri
-  if (msg.id?.fromMe && !botRules.respondToSelf) return false;
-
-  // Tolak pesan dari grup
-  if (msg.isGroup && !botRules.respondToGroups) return false;
-
-  // Cek blacklist (prioritas tertinggi — langsung tolak)
-  if (!msg.isGroup && botRules.blacklistNumbers.includes(chatId)) {
-    console.log(`[Filter] Diabaikan — nomor di blacklist: ${chatId}`);
+  // ① BLACKLIST — prioritas tertinggi, selalu diperiksa pertama
+  if (!isGroup && botRules.blacklistNumbers.includes(chatId)) {
+    console.log(`[Filter] Ditolak — nomor di blacklist: ${chatId}`);
     return false;
   }
-  if (msg.isGroup && botRules.blacklistGroups.includes(chatId)) {
-    console.log(`[Filter] Diabaikan — grup di blacklist: ${chatId}`);
+  if (isGroup && botRules.blacklistGroups.includes(chatId)) {
+    console.log(`[Filter] Ditolak — grup di blacklist: ${chatId}`);
     return false;
   }
 
-  // Cek mode "hanya balas kontak" — orang asing yang tidak di whitelist ditolak
-  if (botRules.onlyReplyToContacts && !msg.isGroup) {
-    const isKontak = msg.sender?.isMyContact ?? false;
-    const adaDiWhitelist = botRules.whitelistNumbers.includes(chatId);
-    if (!isKontak && !adaDiWhitelist) {
-      console.log(
-        `[Filter] Diabaikan — bukan kontak & tidak di whitelist: ${chatId}`,
-      );
-      return false;
-    }
-  }
+  // ② WHITELIST — jika aktif, nomor WAJIB ada di sini
+  // Kalau lolos whitelist → langsung skip ke ④, onlyReplyToContacts diabaikan
+  const whitelistNomorAktif = botRules.whitelistNumbers.length > 0;
+  const whitelistGrupAktif = botRules.whitelistGroups.length > 0;
 
-  // Cek whitelist nomor (jika whitelist aktif/tidak kosong)
-  if (botRules.whitelistNumbers.length > 0 && !msg.isGroup) {
+  if (!isGroup && whitelistNomorAktif) {
     if (!botRules.whitelistNumbers.includes(chatId)) {
-      console.log(
-        `[Filter] Diabaikan — tidak ada di whitelist nomor: ${chatId}`,
-      );
+      console.log(`[Filter] Ditolak — tidak ada di whitelist nomor: ${chatId}`);
+      return false;
+    }
+    // Lolos whitelist → skip ③, langsung cek flags
+    return passesFlagChecks(msg);
+  }
+
+  if (isGroup && whitelistGrupAktif) {
+    if (!botRules.whitelistGroups.includes(chatId)) {
+      console.log(`[Filter] Ditolak — tidak ada di whitelist grup: ${chatId}`);
+      return false;
+    }
+    // Lolos whitelist → skip ③, langsung cek flags
+    return passesFlagChecks(msg);
+  }
+
+  // ③ ONLY REPLY TO CONTACTS
+  // Hanya jalan kalau whitelist tidak aktif
+  if (botRules.onlyReplyToContacts && !isGroup) {
+    const isKontak = msg.sender?.isMyContact ?? false;
+    if (!isKontak) {
+      console.log(`[Filter] Ditolak — bukan kontak tersimpan: ${chatId}`);
       return false;
     }
   }
 
-  // Cek whitelist grup
-  if (botRules.whitelistGroups.length > 0 && msg.isGroup) {
-    if (!botRules.whitelistGroups.includes(chatId)) return false;
-  }
+  // ④ RESPOND-TO FLAGS — prioritas terendah
+  return passesFlagChecks(msg);
+}
 
+// Helper untuk Cek ④ — dipisah karena dipanggil dari dua jalur:
+// 1. Setelah lolos whitelist (skip ③)
+// 2. Dari alur normal setelah ③
+function passesFlagChecks(msg: Record<string, any>): boolean {
+  if (msg.isStatusV3 && !botRules.respondToStatus) return false;
+  if (msg.id?.fromMe && !botRules.respondToSelf) return false;
+  if (msg.isGroup && !botRules.respondToGroups) return false;
   return true;
 }

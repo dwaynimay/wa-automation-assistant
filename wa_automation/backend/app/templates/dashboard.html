@@ -5,114 +5,39 @@
     <meta http-equiv="refresh" content="15" />
     <title>WA Bot Monitor</title>
     <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        font-family: 'Segoe UI', sans-serif;
-        background: #f0f2f5;
-        padding: 20px;
-      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; }
       .container {
-        max-width: 1100px;
-        margin: auto;
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        max-width: 1100px; margin: auto; background: white;
+        padding: 25px; border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
       }
-      h2 {
-        color: #25d366;
-        margin-bottom: 6px;
-      }
-      .meta {
-        color: #999;
-        font-size: 12px;
-        margin-bottom: 20px;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-      th,
-      td {
-        padding: 10px 12px;
-        text-align: left;
-        border-bottom: 1px solid #f0f0f0;
-        font-size: 13px;
-      }
-      th {
-        background: #f8f9fa;
-        color: #888;
-        text-transform: uppercase;
-        font-size: 11px;
-        letter-spacing: 0.5px;
-      }
-      tr:hover {
-        background: #fafafa;
-      }
-
-      .badge {
-        padding: 3px 9px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-      }
-      .role-user {
-        background: #e7f3ff;
-        color: #0066cc;
-      }
-      .role-bot {
-        background: #e6ffed;
-        color: #1a7a3c;
-      }
-      .role-owner {
-        background: #fff3e6;
-        color: #b35900;
-      }
-
-      .emo-happy {
-        border-left: 3px solid #28a745;
-      }
-      .emo-angry {
-        border-left: 3px solid #dc3545;
-      }
-      .emo-urgent {
-        border-left: 3px solid #ffc107;
-      }
-      .emo-sad {
-        border-left: 3px solid #17a2b8;
-      }
-      .emo-neutral {
-        border-left: 3px solid #dee2e6;
-      }
-
-      .jid-small {
-        font-size: 11px;
-        color: #bbb;
-        display: block;
-      }
-      .score {
-        font-size: 11px;
-        color: #ccc;
-        display: block;
-      }
-      .empty {
-        text-align: center;
-        color: #bbb;
-        padding: 60px 0;
-      }
+      h2 { color: #25d366; margin-bottom: 6px; }
+      .meta { color: #999; font-size: 12px; margin-bottom: 20px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+      th { background: #f8f9fa; color: #888; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+      tr:hover { background: #fafafa; }
+      .badge { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+      .role-user      { background: #e7f3ff; color: #0066cc; }
+      .role-assistant { background: #e6ffed; color: #1a7a3c; }
+      .type-chat     { border-left: 3px solid #25d366; }
+      .type-image    { border-left: 3px solid #007bff; }
+      .type-audio,
+      .type-ptt      { border-left: 3px solid #fd7e14; }
+      .type-video    { border-left: 3px solid #6f42c1; }
+      .type-document { border-left: 3px solid #6c757d; }
+      .type-sticker  { border-left: 3px solid #e83e8c; }
+      .jid-small { font-size: 11px; color: #bbb; display: block; }
+      .empty { text-align: center; color: #bbb; padding: 60px 0; }
     </style>
   </head>
   <body>
     <div class="container">
       <h2>📱 WA Bot Monitor</h2>
       <p class="meta">
-        Refresh otomatis setiap 15 detik &bull; Menampilkan 50 pesan terakhir
-        &bull; Total tersimpan: <strong>{{ total }}</strong> pesan
+        Refresh otomatis setiap 15 detik &bull;
+        Menampilkan {{ messages|length }} dari <strong>{{ total }}</strong> pesan
       </p>
 
       {% if messages %}
@@ -122,30 +47,28 @@
             <th>Waktu</th>
             <th>Pengirim</th>
             <th>Role</th>
+            <th>Tipe</th>
             <th>Pesan</th>
-            <th>Emosi</th>
           </tr>
         </thead>
         <tbody>
           {% for msg in messages %}
-          <tr class="emo-{{ msg.emotion_label }}">
-            <td style="color: #aaa; white-space: nowrap">
+          <tr class="type-{{ msg.message_type }}">
+            <td style="color: #aaa; white-space: nowrap; font-size: 11px;">
               {{ msg.timestamp }}
             </td>
             <td>
               <strong>{{ msg.nama or 'Unknown' }}</strong>
-              <span class="jid-small">{{ msg.jid }}</span>
+              <span class="jid-small">{{ msg.sender_jid }}</span>
+              <span class="jid-small" style="color: #ddd;">{{ msg.chat_jid }}</span>
             </td>
             <td>
               <span class="badge role-{{ msg.role }}">
                 {{ msg.role | upper }}
               </span>
             </td>
-            <td>{{ msg.content }}</td>
-            <td>
-              {{ msg.emotion_label | upper }}
-              <span class="score">{{ msg.sentiment_score }}</span>
-            </td>
+            <td style="font-size: 11px; color: #888;">{{ msg.message_type }}</td>
+            <td>{{ msg.content or '—' }}</td>
           </tr>
           {% endfor %}
         </tbody>

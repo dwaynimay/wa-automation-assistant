@@ -4,3 +4,13 @@ export type { WPPType } from './wpp.types';
 export type { MessageData } from './message.types';
 export type { ChatMessage, ToolCall } from './ai.types';
 export type { BotCommand } from './command.types';
+export type {
+  IContact,
+  IChat,
+  IMessage,
+  MessageType,
+  MessageRole,
+  UpsertContactPayload,
+  UpsertChatPayload,
+  SaveMessagePayload,
+} from './database.types';

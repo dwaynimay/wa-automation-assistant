@@ -12,11 +12,16 @@ def dashboard():
     with get_db() as conn:
         messages = conn.execute("""
             SELECT
-                m.id, m.jid, m.role, m.content,
-                m.sentiment_score, m.emotion_label,
-                m.timestamp, u.nama
+                m.message_id,
+                m.chat_jid,
+                m.sender_jid,
+                m.role,
+                m.message_type,
+                m.content,
+                m.timestamp,
+                c.pushname AS nama
             FROM messages m
-            LEFT JOIN users u ON m.jid = u.jid
+            LEFT JOIN contacts c ON m.sender_jid = c.jid
             ORDER BY m.timestamp DESC
             LIMIT ?
         """, (Config.DASHBOARD_LIMIT,)).fetchall()
