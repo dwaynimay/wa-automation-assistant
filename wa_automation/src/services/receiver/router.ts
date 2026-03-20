@@ -5,8 +5,9 @@
 // Prioritas: command manual (!ping) → AI assistant.
 
 import { runtimeState } from '../../config'; // ✅
-import { sendHumanizedMessage } from '../../core/wpp'; // ✅
-import { askAI } from '../../features/ai-assistant'; // ✅
+import { sendHumanizedMessage } from '../../core'; // ✅
+import { dbManager } from '../../core'; // ✅
+import { askAI } from '../../features'; // ✅
 import { getCommand } from './commands'; // ✅ via barrel baru
 
 export async function routeMessage(
@@ -33,12 +34,34 @@ export async function routeMessage(
   }
 
   // Rute 2: Kirim ke AI assistant
-  console.log(`[Router] Mengarahkan ke AI untuk: ${senderName}`);
+console.log(`[Router] Mengarahkan ke AI untuk: ${senderName}`);
   const balasanAI = await askAI(text, chatId, senderName, isReply, teksDibalas);
 
   if (balasanAI) {
-    // Simpan teks balasan bot agar processor bisa mengenalinya nanti
+    // 1. Simpan teks balasan bot agar processor bisa mengenalinya nanti
     runtimeState.lastBotText = balasanAI;
+    
+    // 2. Kirim pesan seperti biasa (tanpa perlu menangkap ID dari WPP)
     await sendHumanizedMessage(chatId, balasanAI, msgId);
+    
+    // 3. DAFTARKAN BOT KE TABEL CONTACT (Agar SQLite tidak menolak pesannya)
+    await dbManager.upsertContact({
+      jid: 'bot_assistant',
+      pushname: 'Dway AI', // Nama bot kamu
+    });
+
+    // 4. SIMPAN JAWABAN BOT KE DATABASE DENGAN ID BUATAN SENDIRI
+    const sentMsgId = `bot_msg_${Date.now()}`;
+    await dbManager.saveMessage({
+      message_id: sentMsgId,
+      chat_jid: chatId,
+      sender_jid: 'bot_assistant', 
+      is_from_me: 1,
+      role: 'assistant',
+      message_type: 'chat',
+      content: balasanAI,
+      timestamp: Math.floor(Date.now() / 1000),
+      quoted_message_id: msgId,
+    });
   }
 }
