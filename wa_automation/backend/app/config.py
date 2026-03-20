@@ -25,3 +25,5 @@ class Config:
 
     # Jumlah maksimal baris yang ditampilkan di dashboard
     DASHBOARD_LIMIT: int = 50
+
+    MEDIA_DIR: str = os.path.join(BASE_DIR, '..', 'media')

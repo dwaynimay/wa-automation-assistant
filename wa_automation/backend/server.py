@@ -15,11 +15,11 @@ from app.config import Config
 app = create_app()
 
 if __name__ == '__main__':
-    print("╔════════════════════════════════════════╗")
-    print("║       WA Automation Backend            ║")
-    print(f"║  API    : http://{Config.HOST}:{Config.PORT}          ║")
-    print(f"║  Monitor: http://{Config.HOST}:{Config.PORT}/dashboard ║")
-    print("╚════════════════════════════════════════╝")
+    print("╔════════════════════════════════════════════╗")
+    print("║           WA Automation Backend            ║")
+    print(f"║  API    : http://{Config.HOST}:{Config.PORT}            ║")
+    print(f"║  Monitor: http://{Config.HOST}:{Config.PORT}/dashboard  ║")
+    print("╚════════════════════════════════════════════╝")
 
     app.run(
         host=Config.HOST,

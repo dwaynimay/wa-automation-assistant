@@ -67,7 +67,20 @@ export async function extractMessageData(msg: unknown): Promise<MessageData> {
   try {
     tipePesan = m?.type ?? 'unknown';
     const mentah = m?.body ?? m?.caption ?? m?.content ?? '';
-    teks = String(mentah).trim();
+    const raw = String(mentah).trim();
+
+    // Jangan simpan base64 ke kolom content — itu bukan teks/caption.
+    // Base64 ditandai dengan karakter '/' dan '+' yang sangat panjang,
+    // atau dimulai dengan '/9j/' (JPEG) atau 'iVBOR' (PNG).
+    const isBase64 =
+      raw.length > 200 &&
+      (raw.startsWith('/9j/') || // JPEG
+        raw.startsWith('iVBOR') || // PNG
+        raw.startsWith('UklG') || // WebP
+        raw.startsWith('AAAA') || // MP4/video
+        /^[A-Za-z0-9+/]{100,}={0,2}$/.test(raw.substring(0, 200)));
+
+    teks = isBase64 ? '' : raw; // ← kosongkan jika base64
   } catch (e) {
     console.error('[Extractor] Gagal di Cekpoint 4 (Teks):', e);
   }

@@ -185,11 +185,13 @@ export const dbManager = {
     base64DataUrl: string, // format: "data:image/jpeg;base64,/9j/..."
     mimeType: string,
     messageId: string,
+    messageType: string,
   ): Promise<string | null> {
     const result = await postToBackend<{ file_path: string }>('/upload_media', {
       base64: base64DataUrl, // kirim dengan prefix — Python yang strip
       mime_type: mimeType,
       message_id: messageId,
+      message_type: messageType,
     });
 
     if (result?.file_path) {

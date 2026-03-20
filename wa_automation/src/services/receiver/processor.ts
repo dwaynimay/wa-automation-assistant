@@ -85,6 +85,7 @@ export async function processIncomingMessage(msg: unknown): Promise<void> {
             base64DataUrl,
             mediaMimeType,
             messageId,
+            dataPesan.tipePesan,
           );
 
           if (savedPath) {
