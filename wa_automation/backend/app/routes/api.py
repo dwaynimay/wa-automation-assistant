@@ -4,6 +4,8 @@ from flask import Blueprint, request, jsonify
 from app.database import get_db
 from app.emotion import analyze_emotion
 
+import os, base64, mimetypes
+
 api_bp = Blueprint('api', __name__)
 
 
@@ -228,3 +230,85 @@ def get_messages():
         return jsonify({'messages': [dict(r) for r in reversed(rows)]})
     except Exception:
         return jsonify({'messages': []})
+
+# ─── Media ─────────────────────────────────────────────────────────────────
+# Path folder media — satu level di atas folder app/
+MEDIA_DIR = os.path.join(
+    os.path.dirname(  # backend/
+        os.path.dirname(  # backend/app/
+            os.path.abspath(__file__)
+        )
+    ),
+    'media'
+)
+
+
+@api_bp.route('/upload_media', methods=['POST'])
+def upload_media():
+    """
+    Menerima base64 data URL dari userscript,
+    menyimpan file ke backend/media/<subfolder>/,
+    mengembalikan path absolut file yang tersimpan.
+    """
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'status': 'error', 'message': 'Body JSON tidak valid'}), 400
+
+    base64_raw  = data.get('base64', '')
+    mime_type   = data.get('mime_type', 'application/octet-stream')
+    message_id  = (data.get('message_id') or '').strip()
+
+    if not base64_raw or not message_id:
+        return jsonify({'status': 'error', 'message': 'base64 dan message_id wajib diisi'}), 400
+
+    try:
+        # Strip prefix data URL jika ada
+        # Format: "data:image/jpeg;base64,/9j/4AAQ..."
+        if ',' in base64_raw:
+            # Ambil mime_type dari prefix jika belum ada
+            prefix = base64_raw.split(',')[0]  # "data:image/jpeg;base64"
+            if 'data:' in prefix and not mime_type:
+                mime_type = prefix.replace('data:', '').replace(';base64', '')
+            base64_raw = base64_raw.split(',', 1)[1]
+
+        # Tentukan subfolder berdasarkan tipe
+        if mime_type.startswith('image/'):
+            subfolder = 'images'
+        elif mime_type.startswith('video/'):
+            subfolder = 'videos'
+        elif mime_type.startswith('audio/'):
+            subfolder = 'audio'
+        else:
+            subfolder = 'documents'
+
+        # Buat folder jika belum ada
+        folder_path = os.path.join(MEDIA_DIR, subfolder)
+        os.makedirs(folder_path, exist_ok=True)
+
+        # Tentukan ekstensi dari MIME type
+        ext = mimetypes.guess_extension(mime_type) or '.bin'
+        # Normalisasi ekstensi yang tidak ideal
+        ext = {'.jpe': '.jpg', '.jpeg': '.jpg', '.jfif': '.jpg'}.get(ext, ext)
+
+        # Bersihkan message_id untuk nama file yang aman
+        safe_id   = message_id.replace('/', '_').replace('@', '_').replace(':', '_')
+        file_name = f"{safe_id}{ext}"
+        file_path = os.path.join(folder_path, file_name)
+
+        # Decode dan tulis ke disk
+        file_bytes = base64.b64decode(base64_raw)
+        with open(file_path, 'wb') as f:
+            f.write(file_bytes)
+
+        file_size = len(file_bytes)
+        print(f"[Media] Tersimpan: {file_path} ({file_size:,} bytes)")
+
+        return jsonify({
+            'status':    'success',
+            'file_path': file_path,
+            'size':      file_size,
+        })
+
+    except Exception as e:
+        print(f"[ERROR /upload_media] {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500

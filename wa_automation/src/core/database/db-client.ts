@@ -170,4 +170,31 @@ export const dbManager = {
   async getChat(chat_jid: string): Promise<IChat | null> {
     return postToBackend<IChat>('/get_chat', { chat_jid });
   },
+
+  /**
+   * Upload file media (base64) ke Python backend untuk disimpan ke disk.
+   * Mengembalikan path file yang tersimpan, atau null jika gagal.
+   *
+   * @param base64Data  - Data base64 dari WPP.util.downloadMedia()
+   * @param mimeType    - MIME type file, contoh: 'image/jpeg'
+   * @param messageId   - ID pesan, dipakai sebagai nama file
+   */
+  // Tambahkan ke dalam object dbManager di db-client.ts
+
+  async uploadMedia(
+    base64DataUrl: string, // format: "data:image/jpeg;base64,/9j/..."
+    mimeType: string,
+    messageId: string,
+  ): Promise<string | null> {
+    const result = await postToBackend<{ file_path: string }>('/upload_media', {
+      base64: base64DataUrl, // kirim dengan prefix — Python yang strip
+      mime_type: mimeType,
+      message_id: messageId,
+    });
+
+    if (result?.file_path) {
+      console.log(`[DB Client] Media tersimpan: ${result.file_path}`);
+    }
+    return result?.file_path ?? null;
+  },
 };

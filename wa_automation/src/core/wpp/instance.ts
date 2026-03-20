@@ -20,6 +20,15 @@ export interface WPPInstance {
     ) => Promise<void>;
     getMessageById: (msgId: string) => Promise<any>;
     getActiveChat: () => Promise<any>;
+    downloadMedia: (id: string) => Promise<Blob>;
+  };
+  util: {
+    downloadMedia: (msg: any) => Promise<{
+      data: string; // base64 string
+      mimetype: string; // contoh: 'image/jpeg'
+      filename?: string; // nama file asli jika ada
+    }>;
+    blobToBase64: (blob: Blob) => Promise<string>;
   };
 }
 
