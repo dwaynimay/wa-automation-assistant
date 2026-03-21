@@ -37,4 +37,22 @@ export const AI_TOOLS: AiToolDefinition[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'saveUserMemory',
+      description:
+        'Simpan fakta, preferensi, atau informasi jangka panjang mengenai pengguna yang menurutmu penting untuk diingat di masa mendatang. Gunakan bila pengguna memberitahumu informasi tentang dirinya.',
+      parameters: {
+        type: 'object',
+        properties: {
+          fact: {
+            type: 'string',
+            description: 'Fakta penting atau informasi spesifik tentang pengguna tersebut.',
+          },
+        },
+        required: ['fact'],
+      },
+    },
+  },
 ];

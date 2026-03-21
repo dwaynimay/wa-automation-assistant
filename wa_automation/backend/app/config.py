@@ -16,6 +16,9 @@ class Config:
     # Path lengkap ke file database SQLite
     DB_FILE: str = os.path.join(BASE_DIR, 'bot_memory.db')
 
+    # Path untuk ChromaDB Persistent Storage
+    CHROMA_DB_DIR: str = os.path.join(BASE_DIR, 'chroma_db')
+
     # Host dan port server
     HOST: str = '127.0.0.1'
     PORT: int = 5000

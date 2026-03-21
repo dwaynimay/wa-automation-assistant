@@ -15,6 +15,7 @@ export async function routeMessage(
   chatId: string,
   msgId: string,
   senderName: string,
+  senderJid: string,
   isReply: boolean = false,
   teksDibalas?: string,
 ): Promise<void> {
@@ -34,8 +35,8 @@ export async function routeMessage(
   }
 
   // Rute 2: Kirim ke AI assistant
-console.log(`[Router] Mengarahkan ke AI untuk: ${senderName}`);
-  const balasanAI = await askAI(text, chatId, senderName, isReply, teksDibalas);
+console.log(`[Router] Mengarahkan ke AI untuk: ${senderName} (JID: ${senderJid})`);
+  const balasanAI = await askAI(text, chatId, senderName, senderJid, isReply, teksDibalas);
 
   if (balasanAI) {
     // 1. Simpan teks balasan bot agar processor bisa mengenalinya nanti

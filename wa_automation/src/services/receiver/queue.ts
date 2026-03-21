@@ -51,6 +51,7 @@ async function drainQueue(): Promise<void> {
         data.idChat,
         data.idPesan,
         data.namaPanggilan,
+        data.pengirimAsli,
         data.isReply,
         data.teksDibalas,
       );

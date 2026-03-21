@@ -15,9 +15,15 @@ import type {
   IContact,
   IChat,
   IMessage,
+  IUserMemory,
+  IChatSummary,
   UpsertContactPayload,
   UpsertChatPayload,
   SaveMessagePayload,
+  AddMemoryPayload,
+  SearchMemoryPayload,
+  AddSummaryPayload,
+  SearchSummaryPayload,
 } from '../../shared/types/database.types';
 
 const DB_API_URL = 'http://127.0.0.1:5000';
@@ -199,4 +205,35 @@ export const dbManager = {
     }
     return result?.file_path ?? null;
   },
+
+  // ── Long-Term Memory & Summaries ───────────────────────────────────────────
+
+  async addMemory(payload: AddMemoryPayload): Promise<string | null> {
+    const result = await postToBackend<{ status: string; memory_id: string }>('/add_memory', payload);
+    if (result?.memory_id) {
+      console.log(`[DB Client] Memori tersimpan untuk ${payload.jid}: ${payload.fact}`);
+      return result.memory_id;
+    }
+    return null;
+  },
+
+  async searchMemories(payload: SearchMemoryPayload): Promise<IUserMemory[]> {
+    const result = await postToBackend<{ status: string; memories: IUserMemory[] }>('/search_memories', payload);
+    return result?.memories ?? [];
+  },
+
+  async addSummary(payload: AddSummaryPayload): Promise<string | null> {
+    const result = await postToBackend<{ status: string; summary_id: string }>('/add_summary', payload);
+    if (result?.summary_id) {
+      console.log(`[DB Client] Summary tersimpan untuk conf/room ${payload.chat_jid}`);
+      return result.summary_id;
+    }
+    return null;
+  },
+
+  async searchSummaries(payload: SearchSummaryPayload): Promise<IChatSummary[]> {
+    const result = await postToBackend<{ status: string; summaries: IChatSummary[] }>('/search_summaries', payload);
+    return result?.summaries ?? [];
+  },
 };
+

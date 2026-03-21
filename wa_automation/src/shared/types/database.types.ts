@@ -146,3 +146,27 @@ export type SaveMessagePayload = Omit<
   media_mime_type?: string;
   media_size?: number;
 };
+
+// ─── Memory & Summary ─────────────────────────────────────────────────────────
+
+export interface IUserMemory {
+  memory_id: string;
+  jid: string;
+  fact: string;
+  created_at?: number;
+  distance?: number;
+}
+
+export interface IChatSummary {
+  summary_id: string;
+  chat_jid: string;
+  summary: string;
+  created_at?: number;
+  distance?: number;
+}
+
+export type AddMemoryPayload = Pick<IUserMemory, 'jid' | 'fact'>;
+export type SearchMemoryPayload = { jid: string; query: string; limit?: number };
+
+export type AddSummaryPayload = Pick<IChatSummary, 'chat_jid' | 'summary'>;
+export type SearchSummaryPayload = { chat_jid: string; query: string; limit?: number };

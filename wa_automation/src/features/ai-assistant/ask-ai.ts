@@ -16,11 +16,13 @@ import { buildSystemPrompt } from './prompt-builder';
 import { AI_TOOLS } from './ai-tools';
 import { appConfig } from '../../config'; // ✅
 import { MAX_USER_MESSAGE_LENGTH } from '../../shared/constants'; // ✅
+import { dbManager } from '../../core';
 
 export async function askAI(
   teksUser: string,
   idChat: string,
   senderName: string,
+  senderJid: string,
   isReply: boolean = false,
   teksDibalas?: string,
 ): Promise<string | null> {
@@ -39,7 +41,18 @@ export async function askAI(
     content: teksAkhir.substring(0, MAX_USER_MESSAGE_LENGTH),
   });
 
-  const systemPrompt = buildSystemPrompt(senderName);
+  // Cari histori dari ChromaDB
+  let memoriesText = '';
+  try {
+    const memories = await dbManager.searchMemories({ jid: senderJid, query: teksAkhir, limit: 3 });
+    if (memories && memories.length > 0) {
+      memoriesText = memories.map((m, i) => `${i + 1}. ${m.fact}`).join('\n');
+    }
+  } catch (error) {
+    console.warn('[AskAI] Gagal mengambil memori ChromaDB:', error);
+  }
+
+  const systemPrompt = buildSystemPrompt(senderName, memoriesText);
 
   try {
     // ── Tembakan Pertama ──────────────────────────────────────────────────
@@ -54,21 +67,32 @@ export async function askAI(
 
     const messageAI = response1.choices[0].message;
 
-    // ── Cabang: AI Meminta Tool (Web Search) ─────────────────────────────
+    // ── Cabang: AI Meminta Tool ─────────────────────────────
     if (messageAI.tool_calls && messageAI.tool_calls.length > 0) {
       const toolCall = messageAI.tool_calls[0];
-      const args = JSON.parse(toolCall.function.arguments) as { query: string };
-
-      console.log(`[AskAI] AI meminta web search: "${args.query}"`);
-      const hasilSearch = await searchInternet(args.query);
+      const toolName = toolCall.function.name;
+      
+      let hasilTool = '';
+      if (toolName === 'searchInternet') {
+        const args = JSON.parse(toolCall.function.arguments) as { query: string };
+        console.log(`[AskAI] AI meminta web search: "${args.query}"`);
+        hasilTool = await searchInternet(args.query);
+      } else if (toolName === 'saveUserMemory') {
+        const args = JSON.parse(toolCall.function.arguments) as { fact: string };
+        console.log(`[AskAI] AI menyimpan memori: "${args.fact}"`);
+        await dbManager.addMemory({ jid: senderJid, fact: args.fact });
+        hasilTool = `Sistem: Fakta berhasil disimpan ke memori jangka panjang. Anda sekarang BOLEH mengatakannya kembali bahwa Anda akan mengingatnya, atau lanjutkan percakapan dengan wajar tanpa terlihat kaku.`;
+      } else {
+        hasilTool = 'Error: Tool tidak dikenali.';
+      }
 
       // Simpan hasil tool ke memory agar AI tahu konteksnya
       memoryManager.addMessage(idChat, messageAI);
       memoryManager.addMessage(idChat, {
         role: 'tool',
         tool_call_id: toolCall.id,
-        name: 'searchInternet',
-        content: hasilSearch,
+        name: toolName,
+        content: hasilTool,
       });
 
       // ── Tembakan Kedua (dengan hasil search) ─────────────────────────

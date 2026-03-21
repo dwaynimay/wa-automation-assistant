@@ -63,12 +63,36 @@ def init_db() -> None:
                 timestamp         INTEGER NOT NULL
             );
 
+            -- ─── user_memories ────────────────────────────────────────────────
+            CREATE TABLE IF NOT EXISTS user_memories (
+                memory_id     TEXT    PRIMARY KEY,
+                jid           TEXT    NOT NULL
+                              REFERENCES contacts(jid) ON DELETE CASCADE,
+                fact          TEXT    NOT NULL,
+                created_at    INTEGER NOT NULL DEFAULT (unixepoch())
+            );
+
+            -- ─── chat_summaries ───────────────────────────────────────────────
+            CREATE TABLE IF NOT EXISTS chat_summaries (
+                summary_id    TEXT    PRIMARY KEY,
+                chat_jid      TEXT    NOT NULL
+                              REFERENCES chats(chat_jid) ON DELETE CASCADE,
+                summary       TEXT    NOT NULL,
+                created_at    INTEGER NOT NULL DEFAULT (unixepoch())
+            );
+
             -- ─── Index untuk RAG ──────────────────────────────────────────────
             CREATE INDEX IF NOT EXISTS idx_messages_chat
                 ON messages(chat_jid);
 
             CREATE INDEX IF NOT EXISTS idx_messages_timestamp
                 ON messages(timestamp);
+            
+            CREATE INDEX IF NOT EXISTS idx_user_memories_jid
+                ON user_memories(jid);
+
+            CREATE INDEX IF NOT EXISTS idx_chat_summaries_chat
+                ON chat_summaries(chat_jid);
 
         """)
         conn.commit()

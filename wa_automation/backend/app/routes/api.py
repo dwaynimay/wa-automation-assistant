@@ -4,8 +4,9 @@ from flask import Blueprint, request, jsonify
 from app.database import get_db
 from app.emotion import analyze_emotion
 from app.config import Config
+from app.vector_db import vector_db
 
-import os, base64, mimetypes
+import os, base64, mimetypes, uuid
 
 api_bp = Blueprint('api', __name__)
 
@@ -231,6 +232,104 @@ def get_messages():
         return jsonify({'messages': [dict(r) for r in reversed(rows)]})
     except Exception:
         return jsonify({'messages': []})
+
+# ─── Memories & Summaries ──────────────────────────────────────────────────────
+
+@api_bp.route('/add_memory', methods=['POST'])
+def add_memory():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'status': 'error', 'message': 'Body JSON tidak valid'}), 400
+
+    jid = (data.get('jid') or '').strip()
+    fact = (data.get('fact') or '').strip()
+    
+    if not jid or not fact:
+        return jsonify({'status': 'error', 'message': 'jid dan fact wajib diisi'}), 400
+
+    memory_id = str(uuid.uuid4())
+    
+    try:
+        with get_db() as conn:
+            conn.execute("""
+                INSERT INTO user_memories (memory_id, jid, fact)
+                VALUES (?, ?, ?)
+            """, (memory_id, jid, fact))
+            conn.commit()
+            
+        vector_db.add_memory(memory_id, jid, fact)
+        return jsonify({'status': 'success', 'memory_id': memory_id})
+    except Exception as e:
+        print(f"[ERROR /add_memory] {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@api_bp.route('/search_memories', methods=['POST'])
+def search_memories():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'status': 'error', 'message': 'Body JSON tidak valid'}), 400
+
+    jid = (data.get('jid') or '').strip()
+    query = (data.get('query') or '').strip()
+    limit = int(data.get('limit', 5))
+    
+    if not jid or not query:
+        return jsonify({'status': 'error', 'message': 'jid dan query wajib diisi'}), 400
+
+    try:
+        results = vector_db.search_memories(jid, query, n_results=limit)
+        return jsonify({'status': 'success', 'memories': results})
+    except Exception as e:
+        print(f"[ERROR /search_memories] {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@api_bp.route('/add_summary', methods=['POST'])
+def add_summary():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'status': 'error', 'message': 'Body JSON tidak valid'}), 400
+
+    chat_jid = (data.get('chat_jid') or '').strip()
+    summary = (data.get('summary') or '').strip()
+    
+    if not chat_jid or not summary:
+        return jsonify({'status': 'error', 'message': 'chat_jid dan summary wajib diisi'}), 400
+
+    summary_id = str(uuid.uuid4())
+    
+    try:
+        with get_db() as conn:
+            conn.execute("""
+                INSERT INTO chat_summaries (summary_id, chat_jid, summary)
+                VALUES (?, ?, ?)
+            """, (summary_id, chat_jid, summary))
+            conn.commit()
+            
+        vector_db.add_summary(summary_id, chat_jid, summary)
+        return jsonify({'status': 'success', 'summary_id': summary_id})
+    except Exception as e:
+        print(f"[ERROR /add_summary] {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@api_bp.route('/search_summaries', methods=['POST'])
+def search_summaries():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'status': 'error', 'message': 'Body JSON tidak valid'}), 400
+
+    chat_jid = (data.get('chat_jid') or '').strip()
+    query = (data.get('query') or '').strip()
+    limit = int(data.get('limit', 3))
+    
+    if not chat_jid or not query:
+        return jsonify({'status': 'error', 'message': 'chat_jid dan query wajib diisi'}), 400
+
+    try:
+        results = vector_db.search_summaries(chat_jid, query, n_results=limit)
+        return jsonify({'status': 'success', 'summaries': results})
+    except Exception as e:
+        print(f"[ERROR /search_summaries] {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 # ─── Media ─────────────────────────────────────────────────────────────────
 
