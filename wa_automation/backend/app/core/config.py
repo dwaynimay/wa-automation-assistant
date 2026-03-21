@@ -6,18 +6,22 @@
 import os
 
 # Path ke folder backend/ (lokasi file ini berada)
-# dirname pertama  → backend/app/
-# dirname kedua    → backend/
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# dirname 1 -> backend/app/core
+# dirname 2 -> backend/app
+# dirname 3 -> backend/
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class Config:
     """Konfigurasi utama aplikasi."""
 
+    # Path folder storage khusus data dinamis
+    STORAGE_DIR: str = os.path.join(BASE_DIR, 'storage')
+
     # Path lengkap ke file database SQLite
-    DB_FILE: str = os.path.join(BASE_DIR, 'bot_memory.db')
+    DB_FILE: str = os.path.join(STORAGE_DIR, 'database', 'bot_memory.db')
 
     # Path untuk ChromaDB Persistent Storage
-    CHROMA_DB_DIR: str = os.path.join(BASE_DIR, 'chroma_db')
+    CHROMA_DB_DIR: str = os.path.join(STORAGE_DIR, 'vector_db')
 
     # Host dan port server
     HOST: str = '127.0.0.1'
@@ -29,4 +33,5 @@ class Config:
     # Jumlah maksimal baris yang ditampilkan di dashboard
     DASHBOARD_LIMIT: int = 50
 
-    MEDIA_DIR: str = os.path.join(BASE_DIR, '..', 'media')
+    # Folder media
+    MEDIA_DIR: str = os.path.join(STORAGE_DIR, 'media')

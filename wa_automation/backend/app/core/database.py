@@ -2,7 +2,7 @@
 
 import sqlite3
 from contextlib import contextmanager
-from app.config import Config
+from .config import Config
 
 
 @contextmanager

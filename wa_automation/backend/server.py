@@ -10,7 +10,7 @@ _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _BACKEND_DIR)
 
 from app import create_app
-from app.config import Config
+from app.core import Config
 
 app = create_app()
 

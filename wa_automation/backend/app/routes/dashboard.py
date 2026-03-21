@@ -1,8 +1,7 @@
 # backend/app/routes/dashboard.py
 
 from flask import Blueprint, render_template
-from app.database import get_db
-from app.config import Config
+from app.core import get_db, Config
 
 dashboard_bp = Blueprint('dashboard', __name__)
 

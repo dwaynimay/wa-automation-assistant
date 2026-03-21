@@ -5,7 +5,7 @@
 
 from flask import Flask
 from flask_cors import CORS
-from .database import init_db
+from .core import init_db
 from .routes import register_routes
 
 
