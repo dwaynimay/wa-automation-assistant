@@ -42,3 +42,6 @@ __pycache__/
 *.db-wal
 *.db-shm
 bot_memory.db
+
+chroma_db/
+chroma_db.sqlite3
