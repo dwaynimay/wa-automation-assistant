@@ -12,10 +12,9 @@
 // src/features/ai-assistant/ask-ai.ts
 
 import { fetchGroqApi } from '../../core/groq';
-import { searchInternet } from '../web-search';
 import { memoryManager } from './memory-manager';
 import { buildSystemPrompt } from './prompt-builder';
-import { AI_TOOLS } from './ai-tools';
+import { ALL_TOOL_DEFINITIONS, executeTool } from './tools';
 import { appConfig } from '../../config';
 import { MAX_USER_MESSAGE_LENGTH } from '../../shared/constants';
 import { dbManager } from '../../core';
@@ -32,30 +31,7 @@ function logRag(step: string, data?: unknown): void {
   }
 }
 
-// ─── Tool Handler ─────────────────────────────────────────────────────────────
-async function executeTool(
-  toolName: string,
-  toolArgs: string,
-  senderJid: string,
-  senderName: string,
-): Promise<string> {
-  if (toolName === 'searchInternet') {
-    const { query } = JSON.parse(toolArgs) as { query: string };
-    console.log(`[AskAI] 🔍 Web search: "${query}"`);
-    return await searchInternet(query);
-  }
-
-  if (toolName === 'saveUserMemory') {
-    const { fact } = JSON.parse(toolArgs) as { fact: string };
-    logRag(`💾 AI menyimpan memori baru untuk ${senderName}:`, { fakta: fact, jid: senderJid });
-    await dbManager.addMemory({ jid: senderJid, fact });
-    logRag(`✅ Memori tersimpan! Akan muncul di percakapan berikutnya.`, { fakta: fact });
-    return `[SISTEM] Fakta berhasil disimpan: "${fact}". Lanjutkan percakapan secara natural.`;
-  }
-
-  return `[ERROR] Tool "${toolName}" tidak dikenali.`;
-}
-
+// (executeTool lokal telah dipindahkan ke folder /tools/)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function askAI(
@@ -120,7 +96,7 @@ export async function askAI(
     const response1 = await fetchGroqApi({
       model: appConfig.groqModel,
       messages: [systemPrompt, ...memoryManager.getHistory(idChat)],
-      tools: AI_TOOLS,
+      tools: ALL_TOOL_DEFINITIONS,
       tool_choice: 'auto',
       temperature: 0.6,
       max_tokens: 1024,
@@ -136,18 +112,21 @@ export async function askAI(
 
       // Jalankan semua tool yang diminta (bisa lebih dari 1 sekaligus)
       for (const toolCall of messageAI.tool_calls) {
-        const hasilTool = await executeTool(
-          toolCall.function.name,
-          toolCall.function.arguments,
+        const hasilToolObj = await executeTool(
+          {
+            id: toolCall.id,
+            name: toolCall.function.name,
+            arguments: toolCall.function.arguments
+          },
           senderJid,
-          senderName,
+          idChat
         );
 
         memoryManager.addMessage(idChat, {
           role: 'tool',
-          tool_call_id: toolCall.id,
-          name: toolCall.function.name,
-          content: hasilTool,
+          tool_call_id: hasilToolObj.tool_call_id,
+          name: hasilToolObj.name,
+          content: hasilToolObj.content,
         });
       }
 
