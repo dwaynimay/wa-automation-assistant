@@ -9,6 +9,7 @@ export default defineConfig({
         name: 'WA Automation',
         namespace: 'npm/vite-plugin-monkey',
         match: ['https://web.whatsapp.com/*'],
+
         grant: ['unsafeWindow', 'GM_xmlhttpRequest'], // Pastikan GM_xmlhttpRequest ada di sini
         connect: [
           'api.groq.com',
@@ -16,6 +17,7 @@ export default defineConfig({
           'localhost',
           '127.0.0.1',
         ],
+        'run-at': 'document-end',
       },
     }),
   ],

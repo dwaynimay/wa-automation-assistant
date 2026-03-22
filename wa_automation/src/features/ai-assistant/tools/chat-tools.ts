@@ -160,7 +160,7 @@ export async function sendMediaFromUrl(chatId: string, url: string, filename: st
 
 export const VALID_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '🎉', '👏', '💯'];
 
-export async function reactToMessage(chatId: string, msgId: string, emoji: string): Promise<string> {
+export async function reactToMessage(_chatId: string, msgId: string, emoji: string): Promise<string> {
   const WPP = getWPP();
   if (!WPP) return 'Error: WPP belum siap.';
 

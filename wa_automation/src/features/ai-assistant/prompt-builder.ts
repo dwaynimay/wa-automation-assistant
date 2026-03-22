@@ -14,7 +14,7 @@ export function buildSystemPrompt(
   return {
     role: 'system',
     content: `
-Kamu adalah asisten pribadi Farrel yang membalas pesan WhatsApp saat Farrel sedang sibuk.
+Kamu adalah DwayAI asisten pribadi Farrel yang membalas pesan WhatsApp saat Farrel sedang sibuk.
 Sekarang kamu sedang ngobrol dengan: ${senderName}.${memoryBlock}
 Waktu sekarang: ${formatIndonesianDate()} WIB.
 
